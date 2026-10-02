@@ -29,7 +29,8 @@
     asistente: 'Asistente',
     acerca: 'Acerca del proyecto'
   };
-  var PEOPLE = { Lupe: '#0E7A56', Carla: '#9E2B1F', Luis: '#185A8C', Ana: '#8A5400', Mateo: '#6D28D9', Yo: '#0E7A56' };
+  var PEOPLE = { Yapa: '#0E7A56', Carla: '#9E2B1F', Luis: '#185A8C', Ana: '#8A5400', Mateo: '#6D28D9', Yo: '#0E7A56' };
+  var PALETTE = ['#0E7A56', '#9E2B1F', '#185A8C', '#8A5400', '#6D28D9', '#0F6E6E'];
   var QUICK = [
     '¿Qué está por vencer?',
     '¿Qué hay que comprar?',
@@ -44,7 +45,8 @@
     priceCat: 'Todas',
     chatDraft: '',
     typing: false,
-    lastRoute: ''
+    lastRoute: '',
+    authMode: 'login'
   };
   var toastTimer = 0;
 
@@ -100,7 +102,12 @@
     };
   }
 
-  function personColor(name) { return PEOPLE[name] || '#0E7A56'; }
+  function personColor(name) {
+    if (PEOPLE[name]) return PEOPLE[name];
+    var n = 0;
+    String(name || '').split('').forEach(function (ch) { n += ch.charCodeAt(0); });
+    return PALETTE[n % PALETTE.length];
+  }
 
   function who(name) {
     var initial = String(name || 'Y').charAt(0).toUpperCase();
@@ -211,7 +218,9 @@
     var left = L.round2(limit - m.spent);
     var pace = left < 0 ? 'Superaste el presupuesto por ' + L.money(Math.abs(left)) + '.' : 'Te quedan ' + L.money(Math.max(left, 0)) + ' este mes.';
     var klass = pct > 1 ? 'is-over' : pct > 0.8 ? 'is-tight' : '';
-    var name = (m.state.family.people[0] && m.state.family.people[0].name) || 'familia';
+    var session = Store.session();
+    var name = (session && session.name) || 'familia';
+    var code = (session && session.code) || '';
     var banner = m.expired.length
       ? '<a class="banner" href="#/despensa">' + (m.expired.length === 1
         ? '1 producto venció. No lo consumas: revísalo en la despensa.'
@@ -226,7 +235,12 @@
       return '<p class="meta">' + who(row.by) + ' ' + esc(row.name) + ' · ' + esc(row.reason) + '</p>';
     }).join('');
     var place = [m.state.family.neighborhood, m.state.family.city].filter(Boolean).join(', ');
-    return '<section class="hero"><div class="hero-brand">' + logoMark() + '<span>Lupe</span></div><h1>Hola, ' + esc(name) + '</h1><p>' + esc(L.formatLong(m.today)) + '</p><p>' + esc(place) + '</p><p>Menos desperdicio, compras más claras.</p></section>'
+    var joined = (m.state.joined || []).map(function (row) { return row.name; });
+    var joinedLine = joined.length
+      ? joined.map(function (person) { return who(person) + ' ' + esc(person); }).join(' ')
+      : 'Nadie más entró todavía.';
+    return '<section class="hero"><div class="hero-brand">' + logoMark() + '<span>Yapa</span></div><h1>Hola, ' + esc(name) + '</h1><p>' + esc(L.formatLong(m.today)) + '</p><p>' + esc(place) + '</p><p class="hero-code">Código ' + esc(code) + '</p><p>Menos desperdicio, más yapa para la casa.</p></section>'
+      + '<div class="card session-card"><p class="meta">En este navegador</p><strong>' + esc(name) + '</strong><p class="meta">Familia ' + esc(m.state.family.surname) + ' · ' + esc(code) + '</p><div class="joined">' + joinedLine + '</div><button class="btn ghost" type="button" data-action="logout">Cerrar sesión</button></div>'
       + '<div class="stack">' + banner
       + '<div class="stats">'
       + stat(m.soon.length, 'Por vencer', 'desperdicio')
@@ -238,7 +252,7 @@
       + '</div>'
       + (soonCards ? '<div class="section-title"><h2>Usar pronto</h2><button class="linkish" type="button" data-action="go" data-route="desperdicio">Recetas</button></div><div class="scroller">' + soonCards + '</div>' : '')
       + '<div class="section-title"><h2>Lista familiar</h2><button class="linkish" type="button" data-action="go" data-route="lista">Abrir</button></div>'
-      + '<div class="card"><p class="meta">Lupe sugiere reponer ' + m.suggestions.length + ' productos.</p>' + (listPreview || '<p class="meta">No hay pedidos pendientes.</p>') + '<p class="note">Por comprar: ' + esc(L.money(L.listTotal(m.state.shopping, false))) + '. La lista muestra pedidos de Carla, Luis, Ana y Mateo. En este prototipo todo vive en este celular.</p></div>';
+      + '<div class="card"><p class="meta">Yapa sugiere reponer ' + m.suggestions.length + ' productos.</p>' + (listPreview || '<p class="meta">No hay pedidos pendientes.</p>') + '<p class="note">Por comprar: ' + esc(L.money(L.listTotal(m.state.shopping, false))) + '. Cada pedido muestra quién lo anotó. Quien entre con ' + esc(code) + ' en este navegador ve la misma lista.</p></div>';
   }
 
   function stat(value, label, dest) {
@@ -268,11 +282,14 @@
   }
 
   function viewLista(m) {
-    var people = m.state.family.people.map(function (person) {
-      return '<span class="avatar" style="background:' + personColor(person.name) + '">' + esc(person.name.charAt(0)) + '</span>';
+    var session = Store.session();
+    var joined = (m.state.joined || []).map(function (row) { return row.name; });
+    var people = (joined.length ? joined : m.state.family.people.map(function (person) { return person.name; })).map(function (person) {
+      return '<span class="avatar" style="background:' + personColor(person) + '" title="' + esc(person) + '">' + esc(person.charAt(0)) + '</span>';
     }).join('');
+    var whoJoined = joined.length ? joined.join(', ') : 'todavía nadie';
     var ideas = m.suggestions.map(function (row) {
-      return '<article class="card"><div class="item-line">' + who('Lupe') + '<span class="grow"><h3>' + esc(row.name) + '</h3><p class="meta">' + esc(row.reason) + ' · ' + esc(qtyLabel(row)) + '</p></span><strong class="money">' + esc(L.money(row.qty * row.price)) + '</strong></div><button class="btn tiny" type="button" data-action="add-suggestion" data-id="' + esc(row.pantryId) + '">Agregar</button></article>';
+      return '<article class="card"><div class="item-line">' + who('Yapa') + '<span class="grow"><h3>' + esc(row.name) + '</h3><p class="meta">' + esc(row.reason) + ' · ' + esc(qtyLabel(row)) + '</p></span><strong class="money">' + esc(L.money(row.qty * row.price)) + '</strong></div><button class="btn tiny" type="button" data-action="add-suggestion" data-id="' + esc(row.pantryId) + '">Agregar</button></article>';
     }).join('');
     var open = m.state.shopping.filter(function (row) { return !row.checked; });
     var done = m.state.shopping.filter(function (row) { return row.checked; });
@@ -285,7 +302,7 @@
       }).join('');
     }
     var suggestTotal = L.round2(m.suggestions.reduce(function (sum, row) { return sum + row.qty * row.price; }, 0));
-    return '<div class="card"><div class="split"><div class="avatars" aria-hidden="true">' + people + '</div><span class="grow"><strong>Familia ' + esc(m.state.family.surname) + '</strong><p class="meta">Pedidos de la casa, en este celular</p></span></div><p class="note">Por comprar ' + esc(L.money(L.listTotal(m.state.shopping, false))) + ' · En el carrito ' + esc(L.money(L.listTotal(m.state.shopping, true))) + '</p></div>'
+    return '<div class="card"><div class="split"><div class="avatars" aria-hidden="true">' + people + '</div><span class="grow"><strong>Familia ' + esc(m.state.family.surname) + '</strong><p class="meta">Código ' + esc(session ? session.code : '') + ' · Entraron: ' + esc(whoJoined) + '</p></span></div><p class="note">Por comprar ' + esc(L.money(L.listTotal(m.state.shopping, false))) + ' · En el carrito ' + esc(L.money(L.listTotal(m.state.shopping, true))) + '. Lo que agregues queda a tu nombre.</p></div>'
       + '<div class="section-title"><h2>Sugerencias</h2>' + (m.suggestions.length ? '<button class="linkish" type="button" data-action="add-all">Agregar todas</button>' : '') + '</div>'
       + '<div class="stack">' + (ideas || '<div class="card"><p class="meta">No hay reposiciones urgentes. La despensa está tranquila o ya pasaste las sugerencias a la lista.</p></div>') + '</div>'
       + (m.suggestions.length ? '<p class="note">Si agregas todas, suman cerca de ' + esc(L.money(suggestTotal)) + ' al precio más bajo de la muestra.</p>' : '')
@@ -324,7 +341,8 @@
       return '<a class="menu-row" href="#/' + row[0] + '"><span class="menu-ico">' + esc(row[1].charAt(0)) + '</span><span class="grow">' + esc(row[1]) + '<small>' + esc(row[2]) + '</small></span>' + icon('chev') + '</a>';
     }).join('');
     var install = '<p class="note">Desde el celular: menú Compartir o los tres puntos, y luego Agregar a la pantalla de inicio. En el escritorio, el ícono de instalar aparece en la barra de direcciones.</p>';
-    return '<div class="menu">' + rows + '</div><div class="card" style="margin-top:12px"><h2>En este celular</h2>' + install + '<button class="btn danger" type="button" data-action="open-reset">Restablecer datos de ejemplo</button></div>';
+    var session = Store.session();
+    return '<div class="menu">' + rows + '</div><div class="card" style="margin-top:12px"><h2>En este celular</h2><p class="meta">' + esc(session ? session.name : '') + ' · ' + esc(session ? session.code : '') + '</p>' + install + '<button class="btn ghost" type="button" data-action="logout">Cerrar sesión</button><button class="btn danger" type="button" data-action="open-reset">Restablecer datos de ejemplo</button></div>';
   }
 
   function viewPresupuesto(m) {
@@ -378,12 +396,12 @@
       }).join('');
       return '<div class="msg ' + (msg.role === 'user' ? 'user' : 'bot') + '"><div class="bubble"><p>' + esc(msg.text) + '</p>' + (actions ? '<div class="chips">' + actions + '</div>' : '') + '</div></div>';
     }).join('');
-    var typing = ui.typing ? '<div class="msg bot"><div class="bubble typing" aria-label="Lupe está escribiendo"><i></i><i></i><i></i></div></div>' : '';
+    var typing = ui.typing ? '<div class="msg bot"><div class="bubble typing" aria-label="Yapa está escribiendo"><i></i><i></i><i></i></div></div>' : '';
     var quick = QUICK.map(function (text, index) {
       return '<button type="button" class="chip" data-action="quick" data-i="' + index + '">' + esc(text) + '</button>';
     }).join('');
     return '<div id="chat-log">' + messages + typing + '</div>'
-      + '<div class="composer"><div class="quick">' + quick + '</div><form data-action="send-chat"><div class="composer-row"><input id="chat-input" name="text" value="' + esc(ui.chatDraft) + '" placeholder="Pregúntale a Lupe" autocomplete="off" aria-label="Mensaje para Lupe"' + (ui.typing ? ' disabled' : '') + '><button class="send" type="submit" aria-label="Enviar"' + (ui.typing ? ' disabled' : '') + '>' + icon('send') + '</button></div></form></div>';
+      + '<div class="composer"><div class="quick">' + quick + '</div><form data-action="send-chat"><div class="composer-row"><input id="chat-input" name="text" value="' + esc(ui.chatDraft) + '" placeholder="Pregúntale a Yapa" autocomplete="off" aria-label="Mensaje para Yapa"' + (ui.typing ? ' disabled' : '') + '><button class="send" type="submit" aria-label="Enviar"' + (ui.typing ? ' disabled' : '') + '>' + icon('send') + '</button></div></form></div>';
   }
 
   function viewAcerca(m) {
@@ -392,9 +410,9 @@
     }).join('');
     var home = m.state.family;
     var where = home.address || [home.neighborhood, home.city].filter(Boolean).join(', ');
-    return '<div class="about stack"><div class="card"><div class="hero-brand">' + logoMark() + '<strong>Lupe</strong></div><p>Prototipo para el caso de estudio <strong>App de Gestión Inteligente de Compras para Hogares</strong>. La familia Rojas vive en ' + esc(where) + '. Es un ejemplo ficticio.</p><p>Compara precios en <strong>Hipermaxi</strong>, <strong>Fidalga</strong>, <strong>IC Norte</strong>, <strong>Mercado Los Pozos</strong>, <strong>Mercado Mutualista</strong> y <strong>Abasto</strong>.</p><p>El referente de clase es Minimkt, un minimarket chileno con control de stock, alertas, analítica, pedidos recurrentes y asistente. Lupe pasa esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.</p></div>'
+    return '<div class="about stack"><div class="card"><div class="hero-brand">' + logoMark() + '<strong>Yapa</strong></div><p>Prototipo para el caso de estudio <strong>App de Gestión Inteligente de Compras para Hogares</strong>. La familia Rojas vive en ' + esc(where) + '. Es un ejemplo ficticio. El código de muestra es <strong>ROJAS-2026</strong>.</p><p>Compara precios en <strong>Hipermaxi</strong>, <strong>Fidalga</strong>, <strong>IC Norte</strong>, <strong>Mercado Los Pozos</strong>, <strong>Mercado Mutualista</strong> y <strong>Abasto</strong>.</p><p>El referente de clase es Minimkt, un minimarket chileno con control de stock, alertas, analítica, pedidos recurrentes y asistente. Yapa pasa esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.</p><p>El inicio de sesión guarda cada familia en este navegador. Quien escribe el mismo código en este celular ve los mismos datos. Para sincronizar de verdad entre dispositivos haría falta un servidor, por ejemplo Firebase o Supabase.</p></div>'
       + '<ul class="map"><li><strong>Stock de Minimkt</strong><span>Despensa con cantidad, mínimo y vencimiento.</span></li><li><strong>Alertas de quiebre</strong><span>Avisos de stock bajo, por vencer y vencido.</span></li><li><strong>Analítica</strong><span>Presupuesto del mes y gasto por categoría.</span></li><li><strong>Pedidos recurrentes</strong><span>Sugerencias y lista con pedidos de la familia.</span></li><li><strong>Asistente</strong><span>Respuestas por reglas, con los datos de tu despensa, sin clave de API.</span></li></ul>'
-      + '<div class="card"><h2>Integrantes del grupo</h2><p class="meta">Completa los nombres. Se guardan solo en este navegador, como el resto de Lupe.</p>' + members + '<p class="note">Tecnología: HTML, CSS y JavaScript. Los datos viven en localStorage. Se puede instalar como PWA y, después de la primera visita, abre sin conexión. Pensada para publicarse en GitHub Pages con rutas relativas.</p></div></div>';
+      + '<div class="card"><h2>Integrantes del grupo</h2><p class="meta">Completa los nombres. Se guardan solo en este navegador, como el resto de Yapa.</p>' + members + '<p class="note">Tecnología: HTML, CSS y JavaScript. Los datos viven en localStorage, separados por código de familia. Se puede instalar como PWA y, después de la primera visita, abre sin conexión. Pensada para publicarse en GitHub Pages con rutas relativas.</p></div></div>';
   }
 
   function renderTopbar(name, m) {
@@ -412,7 +430,9 @@
     if (name === 'lista') action = '<button class="btn tiny" type="button" data-action="open-manual">Añadir</button>';
     if (name === 'presupuesto') action = '<button class="btn tiny" type="button" data-action="open-expense">Anotar</button>';
     if (name === 'despensa') action = '<button class="icon-btn" type="button" data-action="open-add-pantry" aria-label="Agregar producto">' + icon('plus') + '</button>';
-    bar.innerHTML = '<div class="topbar-row">' + back + '<div class="grow"><p class="eyebrow">Lupe</p><h1>' + esc(TITLES[name]) + '</h1></div><span class="top-side">' + action + '</span></div>';
+    var session = Store.session();
+    var whoNow = session ? session.name + ' · ' + session.code : 'Yapa';
+    bar.innerHTML = '<div class="topbar-row">' + back + '<div class="grow"><p class="eyebrow">' + esc(whoNow) + '</p><h1>' + esc(TITLES[name]) + '</h1></div><span class="top-side">' + action + '</span></div>';
   }
 
   function renderTabs(name, m) {
@@ -443,7 +463,49 @@
     acerca: viewAcerca
   };
 
+  function signedIn() {
+    return !!(Store.session() && Store.get());
+  }
+
+  function renderLogin() {
+    closeSheet();
+    var app = document.getElementById('app');
+    app.classList.remove('with-dock', 'with-composer');
+    var bar = document.getElementById('topbar');
+    bar.hidden = true;
+    bar.innerHTML = '';
+    var tabs = document.getElementById('tabbar');
+    tabs.hidden = true;
+    tabs.innerHTML = '';
+    var view = document.getElementById('view');
+    view.className = 'view is-gate';
+    var creating = ui.authMode === 'create';
+    var form = creating
+      ? '<form data-action="auth-create">' + field('Tu nombre', '<input name="name" required maxlength="40" autocomplete="name" placeholder="Ana">')
+        + field('Apellido de la familia', '<input name="surname" required maxlength="40" autocomplete="family-name" placeholder="Rojas">', 'Con eso armamos un código como ROJAS-2026.')
+        + '<button class="btn" type="submit">Crear familia</button><p class="form-error" hidden></p></form>'
+        + '<button class="btn ghost" type="button" data-action="auth-mode" data-mode="login">Ya tengo un código</button>'
+      : '<form data-action="auth-login">' + field('Tu nombre', '<input name="name" required maxlength="40" autocomplete="name" placeholder="Carla">')
+        + field('Código de familia', '<input name="code" required maxlength="24" autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="ROJAS-2026">', 'La familia de ejemplo ya está en este navegador: ROJAS-2026.')
+        + '<button class="btn" type="submit">Iniciar sesión</button><p class="form-error" hidden></p></form>'
+        + '<button class="btn ghost" type="button" data-action="auth-mode" data-mode="create">Crear familia</button>';
+    var heading = creating ? 'Crear familia' : 'Iniciar sesión';
+    var lead = creating
+      ? 'Elige tu nombre y el apellido de la casa. Yapa arma un código para que, en este navegador, otros entren a la misma despensa.'
+      : 'Entra con tu nombre y el código de tu casa. En este navegador, el mismo código abre la misma despensa.';
+    view.innerHTML = '<section class="gate"><div class="hero-brand">' + logoMark() + '<span>Yapa</span></div><h1>' + heading + '</h1><p>' + lead + '</p>' + form + '</section>';
+    document.getElementById('offline').hidden = navigator.onLine;
+    var theme = document.querySelector('meta[name="theme-color"]');
+    if (theme) theme.setAttribute('content', '#F4F1EA');
+    document.title = creating ? 'Yapa · Crear familia' : 'Yapa · Iniciar sesión';
+  }
+
   function render() {
+    if (!signedIn()) {
+      renderLogin();
+      return;
+    }
+    document.getElementById('tabbar').hidden = false;
     var name = route();
     var m = model();
     var view = document.getElementById('view');
@@ -460,7 +522,7 @@
     document.getElementById('offline').hidden = navigator.onLine;
     var theme = document.querySelector('meta[name="theme-color"]');
     if (theme) theme.setAttribute('content', name === 'inicio' ? '#0E7A56' : '#F4F1EA');
-    document.title = 'Lupe · ' + TITLES[name];
+    document.title = 'Yapa · ' + TITLES[name];
     if (name === 'despensa') paintPantryList();
     if (name === 'precios') paintPriceList();
     if (name !== ui.lastRoute) {
@@ -549,13 +611,24 @@
   }
 
   function openManual() {
-    var people = Store.get().family.people.map(function (person) { return person.name; }).concat(['Yo']);
+    var session = Store.session();
+    var me = session ? session.name : 'Yo';
+    var people = [];
+    function addPerson(person) {
+      if (!person) return;
+      if (people.some(function (row) { return L.norm(row) === L.norm(person); })) return;
+      people.push(person);
+    }
+    addPerson(me);
+    Store.get().family.people.forEach(function (person) { addPerson(person.name); });
+    (Store.get().joined || []).forEach(function (row) { addPerson(row.name); });
+    addPerson('Yo');
     openSheet('Pedido de la familia', field('Qué falta', '<input name="name" required maxlength="80" placeholder="Ej. Manzana">')
       + field('Categoría', '<select name="category">' + options(D.CATEGORIES, 'Frutas') + '</select>')
       + '<div class="grid-2">' + field('Cantidad', '<input name="qty" required inputmode="decimal" step="any" min="0" value="1">')
       + field('Unidad', '<select name="unit">' + options(D.UNITS, 'u', 'id', 'label') + '</select>') + '</div>'
       + field('Precio estimado (Bs)', '<input name="price" required inputmode="decimal" step="any" min="0" value="0">', 'Si el producto está en el comparador, al guardar usamos el menor precio.')
-      + field('¿Quién lo pidió?', '<select name="by">' + options(people, people[0]) + '</select>')
+      + field('¿Quién lo pidió?', '<select name="by">' + options(people, me) + '</select>')
       + field('Nota', '<input name="reason" maxlength="80" placeholder="Para la lonchera">')
       + '<button class="btn" type="submit">Agregar a la lista</button>', 'save-manual');
   }
@@ -612,7 +685,8 @@
   }
 
   function openReset() {
-    openSheet('Restablecer datos', '<p>Se borran tus cambios y vuelve la despensa de ejemplo de la familia Rojas. Solo afecta a este navegador.</p><button class="btn danger" type="button" data-action="reset-confirm">Restablecer</button><button class="btn ghost" type="button" data-action="close-sheet">Cancelar</button>');
+    var session = Store.session();
+    openSheet('Restablecer datos', '<p>Se borran los cambios de ' + esc(session ? session.code : 'esta familia') + ' y vuelve la despensa de ejemplo. Las otras familias de este navegador no se tocan.</p><button class="btn danger" type="button" data-action="reset-confirm">Restablecer</button><button class="btn ghost" type="button" data-action="close-sheet">Cancelar</button>');
   }
 
   function suggestionByPantry(id) {
@@ -654,7 +728,23 @@
   }
 
   function handleForm(action, data, form) {
-    if (action === 'save-pantry') {
+    if (action === 'auth-login') {
+      var entered = Store.login(data.name, data.code);
+      if (!entered.ok) {
+        showFormError(entered.error);
+        return;
+      }
+      toast('Hola, ' + entered.name + '.');
+      go('inicio');
+    } else if (action === 'auth-create') {
+      var created = Store.createFamily(data.name, data.surname);
+      if (!created.ok) {
+        showFormError(created.error);
+        return;
+      }
+      toast('Familia creada. El código es ' + created.code + '.');
+      go('inicio');
+    } else if (action === 'save-pantry') {
       var id = form && form.dataset.id;
       finish(id ? Store.updatePantry(id, data) : Store.addPantry(data), id ? 'Producto actualizado.' : 'Producto agregado a la despensa.');
     } else if (action === 'save-manual') {
@@ -688,7 +778,16 @@
     var el = event.target.closest('[data-action]');
     if (!el || !document.getElementById('app').contains(el)) return;
     var action = el.dataset.action;
-    if (action === 'go') go(el.dataset.route);
+    if (action === 'auth-mode') {
+      ui.authMode = el.dataset.mode === 'create' ? 'create' : 'login';
+      renderLogin();
+    } else if (action === 'logout') {
+      Store.logout();
+      closeSheet();
+      ui.authMode = 'login';
+      toast('Sesión cerrada. Los datos siguen en este navegador.');
+      render();
+    } else if (action === 'go') go(el.dataset.route);
     else if (action === 'close-sheet') closeSheet();
     else if (action === 'pantry-filter') { ui.pantryFilter = el.dataset.filter; render(); }
     else if (action === 'price-cat') { ui.priceCat = el.dataset.cat; render(); }
@@ -732,7 +831,7 @@
     else if (action === 'reset-confirm') {
       Store.reset();
       closeSheet();
-      toast('Volvieron los datos de la familia Rojas.');
+      toast('Volvió la despensa de ejemplo de esta familia.');
       render();
     } else if (action === 'quick') sendChat(QUICK[Number(el.dataset.i)] || '');
     else if (action === 'bot-send') sendChat(el.dataset.text || '');

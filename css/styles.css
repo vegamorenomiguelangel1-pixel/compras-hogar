@@ -91,6 +91,14 @@ img { max-width: 100%; }
 .view.has-dock { padding-bottom: calc(var(--nav) + env(safe-area-inset-bottom) + 108px); }
 .view.has-composer { padding-bottom: calc(var(--nav) + env(safe-area-inset-bottom) + 148px); }
 .view.has-fab { padding-bottom: calc(var(--nav) + env(safe-area-inset-bottom) + 96px); }
+.view.is-gate { padding-top: 18px; padding-bottom: 32px; }
+.gate { display: grid; gap: 10px; }
+.gate h1 { margin: 12px 0 0; font-size: 1.85rem; letter-spacing: -0.03em; }
+.gate > p { margin: 0 0 8px; color: var(--muted); }
+.session-card { margin-top: 12px; }
+.session-card strong { display: block; font-size: 1.2rem; margin-top: 2px; }
+.joined { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 10px 0 4px; }
+.hero-code { font-weight: 700; }
 
 .topbar {
   position: sticky;
@@ -356,6 +364,7 @@ a.stat, a.card, a.mini, a.banner, a.menu-row { color: inherit; text-decoration: 
   color: white;
 }
 
+.tabbar[hidden] { display: none; }
 .tabbar {
   bottom: 0;
   z-index: 14;

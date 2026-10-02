@@ -1,12 +1,14 @@
-# Lupe — compras del hogar
+# Yapa — compras del hogar
 
 Sitio en vivo: https://vegamorenomiguelangel1-pixel.github.io/compras-hogar/
 
 Prototipo de **App de Gestión Inteligente de Compras para Hogares**, pensado como caso de estudio universitario en Bolivia.
 
-Lupe ayuda a una familia a cuidar la despensa, armar la lista, comparar precios en bolivianos y botar menos comida. La familia de ejemplo es la familia Rojas, del barrio Los Pozos, en Santa Cruz de la Sierra. Los precios están en **Bs**. Los locales de la muestra son **Hipermaxi**, **Fidalga**, **IC Norte**, **Mercado Los Pozos**, **Mercado Mutualista** y **Abasto**.
+Yapa ayuda a una familia a cuidar la despensa, armar la lista, comparar precios en bolivianos y botar menos comida. El nombre viene de la *yapa*: esa porción extra que dan en el mercado. La familia de ejemplo es la familia Rojas, del barrio Los Pozos, en Santa Cruz de la Sierra. Los precios están en **Bs**. Los locales de la muestra son **Hipermaxi**, **Fidalga**, **IC Norte**, **Mercado Los Pozos**, **Mercado Mutualista** y **Abasto**.
 
-El referente de clase es Minimkt (minimarket chileno con stock, alertas, analítica, pedidos recurrentes y asistente). Lupe adapta esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.
+El referente de clase es Minimkt (minimarket chileno con stock, alertas, analítica, pedidos recurrentes y asistente). Yapa adapta esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.
+
+Al abrir, Yapa pide el nombre y un código de familia (el de ejemplo es `ROJAS-2026`) o deja crear una familia y genera el código. En este navegador, quien entra con el mismo código ve la misma despensa y la misma lista. No hay sincronización entre dispositivos: eso pediría un servidor.
 
 ## Funciones
 
@@ -43,7 +45,7 @@ Pruebas de la lógica (fechas, despensa, presupuesto, recetas y asistente):
 node --test test/logic.test.js
 ```
 
-Para volver a los datos de la familia Rojas: **Más → Restablecer datos de ejemplo**.
+Para volver a los datos de ejemplo de la familia en curso: **Más → Restablecer datos de ejemplo**. Para salir: **Cerrar sesión**.
 
 ## GitHub Pages
 

@@ -442,7 +442,7 @@
           id: 'm-hola',
           role: 'bot',
           at: today,
-          text: '¡Hola, Carla! Soy Lupe. Hoy miré la despensa de la familia Rojas, en Santa Cruz de la Sierra: hay cosas por vencer y otras que ya están cortas. Pregúntame o toca una sugerencia. Tus datos se quedan en este celular.',
+          text: '¡Hola! Soy Yapa. Hoy miré la despensa de la familia Rojas, en Santa Cruz de la Sierra: hay cosas por vencer y otras que ya están cortas. Pregúntame o toca una sugerencia. Tus datos se quedan en este celular.',
           actions: [
             { label: 'Qué vence pronto', send: '¿Qué está por vencer?' },
             { label: 'Cómo va el presupuesto', send: '¿Cómo va el presupuesto?' }

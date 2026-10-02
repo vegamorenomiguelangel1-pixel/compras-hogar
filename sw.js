@@ -1,4 +1,4 @@
-var CACHE = 'lupe-shell-v2';
+var CACHE = 'yapa-shell-v2';
 var ASSETS = [
   './',
   './index.html',
