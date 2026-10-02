@@ -29,7 +29,7 @@
     asistente: 'Asistente',
     acerca: 'Acerca del proyecto'
   };
-  var PEOPLE = { Yapa: '#0E7A56', Carla: '#9E2B1F', Luis: '#185A8C', Ana: '#8A5400', Mateo: '#6D28D9', Yo: '#0E7A56' };
+  var PEOPLE = { Lupe: '#0E7A56', Carla: '#9E2B1F', Luis: '#185A8C', Ana: '#8A5400', Mateo: '#6D28D9', Yo: '#0E7A56' };
   var QUICK = [
     '¿Qué está por vencer?',
     '¿Qué hay que comprar?',
@@ -189,7 +189,7 @@
     }).join('');
     var save = span.save > 0 && high
       ? 'Ahorras ' + L.money(span.save) + ' frente a ' + high.store + '.'
-      : 'Mismo precio en los cuatro locales.';
+      : 'Mismo precio en todos los locales.';
     return '<article class="card"><h3>' + esc(product.name) + '</h3><p class="meta">' + esc(product.category) + ' · ' + esc(product.unitLabel) + '</p>'
       + rows + '<p class="note">' + esc(save) + '</p>'
       + '<button class="btn" type="button" data-action="add-catalog" data-id="' + esc(product.id) + '">' + (onList ? 'Sumar otra unidad' : 'Agregar a la lista') + ' · ' + esc(L.money(best[0].price)) + '</button></article>';
@@ -225,7 +225,8 @@
     var listPreview = pending.map(function (row) {
       return '<p class="meta">' + who(row.by) + ' ' + esc(row.name) + ' · ' + esc(row.reason) + '</p>';
     }).join('');
-    return '<section class="hero"><div class="hero-brand">' + logoMark() + '<span>Yapa</span></div><h1>Hola, ' + esc(name) + '</h1><p>' + esc(L.formatLong(m.today)) + ' · ' + esc(m.state.family.city) + '</p><p>Menos desperdicio, más yapa para la casa.</p></section>'
+    var place = [m.state.family.neighborhood, m.state.family.city].filter(Boolean).join(', ');
+    return '<section class="hero"><div class="hero-brand">' + logoMark() + '<span>Lupe</span></div><h1>Hola, ' + esc(name) + '</h1><p>' + esc(L.formatLong(m.today)) + '</p><p>' + esc(place) + '</p><p>Menos desperdicio, compras más claras.</p></section>'
       + '<div class="stack">' + banner
       + '<div class="stats">'
       + stat(m.soon.length, 'Por vencer', 'desperdicio')
@@ -237,7 +238,7 @@
       + '</div>'
       + (soonCards ? '<div class="section-title"><h2>Usar pronto</h2><button class="linkish" type="button" data-action="go" data-route="desperdicio">Recetas</button></div><div class="scroller">' + soonCards + '</div>' : '')
       + '<div class="section-title"><h2>Lista familiar</h2><button class="linkish" type="button" data-action="go" data-route="lista">Abrir</button></div>'
-      + '<div class="card"><p class="meta">Yapa sugiere reponer ' + m.suggestions.length + ' productos.</p>' + (listPreview || '<p class="meta">No hay pedidos pendientes.</p>') + '<p class="note">Por comprar: ' + esc(L.money(L.listTotal(m.state.shopping, false))) + '. La lista muestra pedidos de Carla, Luis, Ana y Mateo. En este prototipo todo vive en este celular.</p></div>';
+      + '<div class="card"><p class="meta">Lupe sugiere reponer ' + m.suggestions.length + ' productos.</p>' + (listPreview || '<p class="meta">No hay pedidos pendientes.</p>') + '<p class="note">Por comprar: ' + esc(L.money(L.listTotal(m.state.shopping, false))) + '. La lista muestra pedidos de Carla, Luis, Ana y Mateo. En este prototipo todo vive en este celular.</p></div>';
   }
 
   function stat(value, label, dest) {
@@ -271,7 +272,7 @@
       return '<span class="avatar" style="background:' + personColor(person.name) + '">' + esc(person.name.charAt(0)) + '</span>';
     }).join('');
     var ideas = m.suggestions.map(function (row) {
-      return '<article class="card"><div class="item-line">' + who('Yapa') + '<span class="grow"><h3>' + esc(row.name) + '</h3><p class="meta">' + esc(row.reason) + ' · ' + esc(qtyLabel(row)) + '</p></span><strong class="money">' + esc(L.money(row.qty * row.price)) + '</strong></div><button class="btn tiny" type="button" data-action="add-suggestion" data-id="' + esc(row.pantryId) + '">Agregar</button></article>';
+      return '<article class="card"><div class="item-line">' + who('Lupe') + '<span class="grow"><h3>' + esc(row.name) + '</h3><p class="meta">' + esc(row.reason) + ' · ' + esc(qtyLabel(row)) + '</p></span><strong class="money">' + esc(L.money(row.qty * row.price)) + '</strong></div><button class="btn tiny" type="button" data-action="add-suggestion" data-id="' + esc(row.pantryId) + '">Agregar</button></article>';
     }).join('');
     var open = m.state.shopping.filter(function (row) { return !row.checked; });
     var done = m.state.shopping.filter(function (row) { return row.checked; });
@@ -377,21 +378,23 @@
       }).join('');
       return '<div class="msg ' + (msg.role === 'user' ? 'user' : 'bot') + '"><div class="bubble"><p>' + esc(msg.text) + '</p>' + (actions ? '<div class="chips">' + actions + '</div>' : '') + '</div></div>';
     }).join('');
-    var typing = ui.typing ? '<div class="msg bot"><div class="bubble typing" aria-label="Yapa está escribiendo"><i></i><i></i><i></i></div></div>' : '';
+    var typing = ui.typing ? '<div class="msg bot"><div class="bubble typing" aria-label="Lupe está escribiendo"><i></i><i></i><i></i></div></div>' : '';
     var quick = QUICK.map(function (text, index) {
       return '<button type="button" class="chip" data-action="quick" data-i="' + index + '">' + esc(text) + '</button>';
     }).join('');
     return '<div id="chat-log">' + messages + typing + '</div>'
-      + '<div class="composer"><div class="quick">' + quick + '</div><form data-action="send-chat"><div class="composer-row"><input id="chat-input" name="text" value="' + esc(ui.chatDraft) + '" placeholder="Pregúntale a Yapa" autocomplete="off" aria-label="Mensaje para Yapa"' + (ui.typing ? ' disabled' : '') + '><button class="send" type="submit" aria-label="Enviar"' + (ui.typing ? ' disabled' : '') + '>' + icon('send') + '</button></div></form></div>';
+      + '<div class="composer"><div class="quick">' + quick + '</div><form data-action="send-chat"><div class="composer-row"><input id="chat-input" name="text" value="' + esc(ui.chatDraft) + '" placeholder="Pregúntale a Lupe" autocomplete="off" aria-label="Mensaje para Lupe"' + (ui.typing ? ' disabled' : '') + '><button class="send" type="submit" aria-label="Enviar"' + (ui.typing ? ' disabled' : '') + '>' + icon('send') + '</button></div></form></div>';
   }
 
   function viewAcerca(m) {
     var members = m.state.group.map(function (member, index) {
       return field('Integrante ' + (index + 1), '<input class="member-name" data-index="' + index + '" name="m' + index + '" value="' + esc(member.name) + '" placeholder="Nombre y apellido" maxlength="60" autocomplete="name">');
     }).join('');
-    return '<div class="about stack"><div class="card"><div class="hero-brand">' + logoMark() + '<strong>Yapa</strong></div><p>Prototipo para el caso de estudio <strong>App de Gestión Inteligente de Compras para Hogares</strong>. La familia Rojas, de Cochabamba, es un ejemplo ficticio.</p><p>El referente de clase es Minimkt, un minimarket chileno con control de stock, alertas, analítica, pedidos recurrentes y asistente. Yapa pasa esas ideas a la cocina de una casa boliviana. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.</p></div>'
+    var home = m.state.family;
+    var where = home.address || [home.neighborhood, home.city].filter(Boolean).join(', ');
+    return '<div class="about stack"><div class="card"><div class="hero-brand">' + logoMark() + '<strong>Lupe</strong></div><p>Prototipo para el caso de estudio <strong>App de Gestión Inteligente de Compras para Hogares</strong>. La familia Rojas vive en ' + esc(where) + '. Es un ejemplo ficticio.</p><p>Compara precios en <strong>Hipermaxi</strong>, <strong>Fidalga</strong>, <strong>IC Norte</strong>, <strong>Mercado Los Pozos</strong>, <strong>Mercado Mutualista</strong> y <strong>Abasto</strong>.</p><p>El referente de clase es Minimkt, un minimarket chileno con control de stock, alertas, analítica, pedidos recurrentes y asistente. Lupe pasa esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.</p></div>'
       + '<ul class="map"><li><strong>Stock de Minimkt</strong><span>Despensa con cantidad, mínimo y vencimiento.</span></li><li><strong>Alertas de quiebre</strong><span>Avisos de stock bajo, por vencer y vencido.</span></li><li><strong>Analítica</strong><span>Presupuesto del mes y gasto por categoría.</span></li><li><strong>Pedidos recurrentes</strong><span>Sugerencias y lista con pedidos de la familia.</span></li><li><strong>Asistente</strong><span>Respuestas por reglas, con los datos de tu despensa, sin clave de API.</span></li></ul>'
-      + '<div class="card"><h2>Integrantes del grupo</h2><p class="meta">Completa los nombres. Se guardan solo en este navegador, como el resto de Yapa.</p>' + members + '<p class="note">Tecnología: HTML, CSS y JavaScript. Los datos viven en localStorage. Se puede instalar como PWA y, después de la primera visita, abre sin conexión. Pensada para publicarse en GitHub Pages con rutas relativas.</p></div></div>';
+      + '<div class="card"><h2>Integrantes del grupo</h2><p class="meta">Completa los nombres. Se guardan solo en este navegador, como el resto de Lupe.</p>' + members + '<p class="note">Tecnología: HTML, CSS y JavaScript. Los datos viven en localStorage. Se puede instalar como PWA y, después de la primera visita, abre sin conexión. Pensada para publicarse en GitHub Pages con rutas relativas.</p></div></div>';
   }
 
   function renderTopbar(name, m) {
@@ -409,7 +412,7 @@
     if (name === 'lista') action = '<button class="btn tiny" type="button" data-action="open-manual">Añadir</button>';
     if (name === 'presupuesto') action = '<button class="btn tiny" type="button" data-action="open-expense">Anotar</button>';
     if (name === 'despensa') action = '<button class="icon-btn" type="button" data-action="open-add-pantry" aria-label="Agregar producto">' + icon('plus') + '</button>';
-    bar.innerHTML = '<div class="topbar-row">' + back + '<div class="grow"><p class="eyebrow">Yapa</p><h1>' + esc(TITLES[name]) + '</h1></div><span class="top-side">' + action + '</span></div>';
+    bar.innerHTML = '<div class="topbar-row">' + back + '<div class="grow"><p class="eyebrow">Lupe</p><h1>' + esc(TITLES[name]) + '</h1></div><span class="top-side">' + action + '</span></div>';
   }
 
   function renderTabs(name, m) {
@@ -457,7 +460,7 @@
     document.getElementById('offline').hidden = navigator.onLine;
     var theme = document.querySelector('meta[name="theme-color"]');
     if (theme) theme.setAttribute('content', name === 'inicio' ? '#0E7A56' : '#F4F1EA');
-    document.title = 'Yapa · ' + TITLES[name];
+    document.title = 'Lupe · ' + TITLES[name];
     if (name === 'despensa') paintPantryList();
     if (name === 'precios') paintPriceList();
     if (name !== ui.lastRoute) {
@@ -568,7 +571,7 @@
     }).join('');
     openSheet('Registrar compra', '<p>Esto suma el gasto de hoy, repone la despensa y saca del carrito lo marcado.</p>' + lines
       + '<p><strong>Total ' + esc(L.money(L.listTotal(Store.get().shopping, true))) + '</strong></p>'
-      + field('Local', '<select name="store">' + options(D.STORES, 'Mercado local') + '</select>')
+      + field('Local', '<select name="store">' + options(D.STORES, 'Mercado Los Pozos') + '</select>')
       + '<button class="btn" type="submit">Guardar compra</button>', 'save-checkout');
   }
 
@@ -582,7 +585,7 @@
   }
 
   function openBudget() {
-    openSheet('Presupuesto del mes', field('Límite en bolivianos', '<input name="limit" required inputmode="decimal" step="any" min="1" value="' + esc(Store.get().budgetLimit) + '">', 'Un hogar de cuatro en la ciudad puede moverse cerca de Bs 1.800 en comida, según cómo compren.')
+    openSheet('Presupuesto del mes', field('Límite en bolivianos', '<input name="limit" required inputmode="decimal" step="any" min="1" value="' + esc(Store.get().budgetLimit) + '">', 'Un hogar de cuatro en Santa Cruz de la Sierra puede moverse cerca de Bs 1.800 en comida, según cómo compren.')
       + '<button class="btn" type="submit">Guardar límite</button>', 'save-budget');
   }
 

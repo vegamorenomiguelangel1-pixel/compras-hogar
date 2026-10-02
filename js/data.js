@@ -18,7 +18,7 @@
     'Bebidas'
   ];
 
-  var STORES = ['Hipermaxi', 'Fidalga', 'IC Norte', 'Mercado local'];
+  var STORES = ['Hipermaxi', 'Fidalga', 'IC Norte', 'Mercado Los Pozos', 'Mercado Mutualista', 'Abasto'];
 
   var UNITS = [
     { id: 'u', label: 'unidad' },
@@ -28,36 +28,43 @@
     { id: 'ml', label: 'ml' }
   ];
 
-  function P(h, f, i, m) {
-    return { Hipermaxi: h, Fidalga: f, 'IC Norte': i, 'Mercado local': m };
+  function P(h, f, i, pozos, mutualista, abasto) {
+    return {
+      Hipermaxi: h,
+      Fidalga: f,
+      'IC Norte': i,
+      'Mercado Los Pozos': pozos,
+      'Mercado Mutualista': mutualista,
+      Abasto: abasto
+    };
   }
 
   var CATALOG = [
-    { id: 'arroz', name: 'Arroz Grano de Oro', unit: 'kg', unitLabel: 'kg', category: 'Granos y abarrotes', kgEach: null, aliases: ['arroz', 'grano de oro'], prices: P(9.9, 10.5, 9.6, 8.2) },
-    { id: 'aceite', name: 'Aceite Fino', unit: 'u', unitLabel: 'botella', category: 'Despensa', kgEach: 0.9, aliases: ['aceite', 'aceite fino'], prices: P(17.9, 19.8, 18.7, 19.2) },
-    { id: 'azucar', name: 'Azúcar blanca', unit: 'kg', unitLabel: 'kg', category: 'Despensa', kgEach: null, aliases: ['azucar', 'azúcar'], prices: P(7.4, 7.1, 7.6, 6.8) },
-    { id: 'leche', name: 'Leche PIL', unit: 'u', unitLabel: 'caja', category: 'Lácteos', kgEach: 1.03, aliases: ['leche', 'leche pil'], prices: P(8.5, 8.2, 8.7, 7.9) },
-    { id: 'huevo', name: 'Huevo', unit: 'u', unitLabel: 'unid.', category: 'Proteínas', kgEach: 0.06, aliases: ['huevo', 'huevos'], prices: P(1.3, 1.25, 1.2, 1.1) },
-    { id: 'fideo', name: 'Fideo Don Vittorio', unit: 'u', unitLabel: 'paquete', category: 'Granos y abarrotes', kgEach: 0.4, aliases: ['fideo', 'fideos', 'don vittorio'], prices: P(6.5, 6.9, 6.2, 7.1) },
-    { id: 'atun', name: 'Atún Florida', unit: 'u', unitLabel: 'lata', category: 'Conservas', kgEach: 0.17, aliases: ['atun', 'atún', 'florida'], prices: P(12.9, 11.5, 12.4, 13.2) },
-    { id: 'pollo', name: 'Pollo entero', unit: 'kg', unitLabel: 'kg', category: 'Proteínas', kgEach: null, aliases: ['pollo'], prices: P(20.9, 22.5, 19.8, 21) },
-    { id: 'carne', name: 'Carne molida', unit: 'kg', unitLabel: 'kg', category: 'Proteínas', kgEach: null, aliases: ['carne', 'carne molida', 'molida'], prices: P(47, 49.5, 46, 44) },
-    { id: 'tomate', name: 'Tomate', unit: 'kg', unitLabel: 'kg', category: 'Verduras', kgEach: null, aliases: ['tomate', 'tomates'], prices: P(8.8, 9.4, 8.2, 6.3) },
-    { id: 'papa', name: 'Papa', unit: 'kg', unitLabel: 'kg', category: 'Verduras', kgEach: null, aliases: ['papa', 'papas'], prices: P(6.2, 6.5, 5.9, 4.5) },
-    { id: 'cebolla', name: 'Cebolla', unit: 'kg', unitLabel: 'kg', category: 'Verduras', kgEach: null, aliases: ['cebolla', 'cebollas'], prices: P(7.1, 6.8, 6.4, 5.2) },
-    { id: 'zanahoria', name: 'Zanahoria', unit: 'kg', unitLabel: 'kg', category: 'Verduras', kgEach: null, aliases: ['zanahoria', 'zanahorias'], prices: P(6.4, 6.1, 5.8, 4.7) },
-    { id: 'platano', name: 'Plátano', unit: 'u', unitLabel: 'unid.', category: 'Frutas', kgEach: 0.12, aliases: ['platano', 'plátano', 'guineo', 'banano'], prices: P(1.4, 1.5, 1.3, 1) },
-    { id: 'pan', name: 'Pan de batalla', unit: 'u', unitLabel: 'unid.', category: 'Panadería', kgEach: 0.04, aliases: ['pan', 'pan de batalla', 'marraqueta'], prices: P(0.5, 0.5, 0.5, 0.4) },
-    { id: 'lenteja', name: 'Lentejas', unit: 'kg', unitLabel: 'kg', category: 'Granos y abarrotes', kgEach: null, aliases: ['lenteja', 'lentejas'], prices: P(14.5, 13.9, 14.2, 12.8) },
-    { id: 'yogurt', name: 'Yogurt PIL', unit: 'u', unitLabel: 'pote', category: 'Lácteos', kgEach: 1, aliases: ['yogurt', 'yogur'], prices: P(14.2, 13.5, 13.9, 15) },
-    { id: 'queso', name: 'Queso criollo', unit: 'kg', unitLabel: 'kg', category: 'Lácteos', kgEach: null, aliases: ['queso', 'queso criollo'], prices: P(52, 49, 50, 46) },
-    { id: 'detergente', name: 'Detergente Ace', unit: 'u', unitLabel: 'bolsa', category: 'Limpieza', kgEach: 0.8, aliases: ['detergente'], prices: P(18.5, 17.2, 16.9, 19) },
-    { id: 'cafe', name: 'Café Illimani', unit: 'u', unitLabel: 'bolsa', category: 'Despensa', kgEach: 0.25, aliases: ['cafe', 'café', 'illimani'], prices: P(27.5, 26, 28, 24.5) },
-    { id: 'mantequilla', name: 'Mantequilla PIL', unit: 'u', unitLabel: 'pote', category: 'Lácteos', kgEach: 0.1, aliases: ['mantequilla'], prices: P(9.8, 9.4, 9.9, 10.2) },
-    { id: 'manzana', name: 'Manzana roja', unit: 'kg', unitLabel: 'kg', category: 'Frutas', kgEach: null, aliases: ['manzana', 'manzanas'], prices: P(16.5, 15.9, 16, 13.5) },
-    { id: 'sal', name: 'Sal yodada', unit: 'u', unitLabel: 'bolsa', category: 'Despensa', kgEach: 1, aliases: ['sal', 'sal yodada'], prices: P(2.8, 2.5, 2.6, 2.2) },
-    { id: 'gaseosa', name: 'Coca-Cola', unit: 'u', unitLabel: 'botella 2 L', category: 'Bebidas', kgEach: 2, aliases: ['gaseosa', 'coca cola', 'coca-cola'], prices: P(12, 12.5, 11.8, 13) },
-    { id: 'harina', name: 'Harina', unit: 'kg', unitLabel: 'kg', category: 'Despensa', kgEach: null, aliases: ['harina'], prices: P(6.8, 6.5, 6.2, 6.9) }
+    { id: 'arroz', name: 'Arroz Grano de Oro', unit: 'kg', unitLabel: 'kg', category: 'Granos y abarrotes', kgEach: null, aliases: ['arroz', 'grano de oro'], prices: P(9.9, 10.5, 9.6, 8.2, 8.6, 8.9) },
+    { id: 'aceite', name: 'Aceite Fino', unit: 'u', unitLabel: 'botella', category: 'Despensa', kgEach: 0.9, aliases: ['aceite', 'aceite fino'], prices: P(17.9, 19.8, 18.7, 19.2, 18.5, 19.5) },
+    { id: 'azucar', name: 'Azúcar blanca', unit: 'kg', unitLabel: 'kg', category: 'Despensa', kgEach: null, aliases: ['azucar', 'azúcar'], prices: P(7.4, 7.1, 7.6, 6.8, 7, 6.9) },
+    { id: 'leche', name: 'Leche PIL', unit: 'u', unitLabel: 'caja', category: 'Lácteos', kgEach: 1.03, aliases: ['leche', 'leche pil'], prices: P(8.5, 8.2, 8.7, 7.9, 8.1, 8.4) },
+    { id: 'huevo', name: 'Huevo', unit: 'u', unitLabel: 'unid.', category: 'Proteínas', kgEach: 0.06, aliases: ['huevo', 'huevos'], prices: P(1.3, 1.25, 1.2, 1.1, 1.15, 1.2) },
+    { id: 'fideo', name: 'Fideo Don Vittorio', unit: 'u', unitLabel: 'paquete', category: 'Granos y abarrotes', kgEach: 0.4, aliases: ['fideo', 'fideos', 'don vittorio'], prices: P(6.5, 6.9, 6.2, 7.1, 6.8, 6.4) },
+    { id: 'atun', name: 'Atún Florida', unit: 'u', unitLabel: 'lata', category: 'Conservas', kgEach: 0.17, aliases: ['atun', 'atún', 'florida'], prices: P(12.9, 11.5, 12.4, 13.2, 12.8, 12.1) },
+    { id: 'pollo', name: 'Pollo entero', unit: 'kg', unitLabel: 'kg', category: 'Proteínas', kgEach: null, aliases: ['pollo'], prices: P(20.9, 22.5, 19.8, 21, 20.5, 20.2) },
+    { id: 'carne', name: 'Carne molida', unit: 'kg', unitLabel: 'kg', category: 'Proteínas', kgEach: null, aliases: ['carne', 'carne molida', 'molida'], prices: P(47, 49.5, 46, 44.5, 45, 43.5) },
+    { id: 'tomate', name: 'Tomate', unit: 'kg', unitLabel: 'kg', category: 'Verduras', kgEach: null, aliases: ['tomate', 'tomates'], prices: P(8.8, 9.4, 8.2, 6.3, 6.6, 7.1) },
+    { id: 'papa', name: 'Papa', unit: 'kg', unitLabel: 'kg', category: 'Verduras', kgEach: null, aliases: ['papa', 'papas'], prices: P(6.2, 6.5, 5.9, 4.5, 4.8, 5.1) },
+    { id: 'cebolla', name: 'Cebolla', unit: 'kg', unitLabel: 'kg', category: 'Verduras', kgEach: null, aliases: ['cebolla', 'cebollas'], prices: P(7.1, 6.8, 6.4, 5.2, 5.5, 5.8) },
+    { id: 'zanahoria', name: 'Zanahoria', unit: 'kg', unitLabel: 'kg', category: 'Verduras', kgEach: null, aliases: ['zanahoria', 'zanahorias'], prices: P(6.4, 6.1, 5.8, 4.7, 5, 5.3) },
+    { id: 'platano', name: 'Plátano', unit: 'u', unitLabel: 'unid.', category: 'Frutas', kgEach: 0.12, aliases: ['platano', 'plátano', 'guineo', 'banano'], prices: P(1.4, 1.5, 1.3, 1, 1.1, 1.2) },
+    { id: 'pan', name: 'Pan de batalla', unit: 'u', unitLabel: 'unid.', category: 'Panadería', kgEach: 0.04, aliases: ['pan', 'pan de batalla', 'marraqueta'], prices: P(0.5, 0.5, 0.5, 0.4, 0.45, 0.5) },
+    { id: 'lenteja', name: 'Lentejas', unit: 'kg', unitLabel: 'kg', category: 'Granos y abarrotes', kgEach: null, aliases: ['lenteja', 'lentejas'], prices: P(14.5, 13.9, 14.2, 12.8, 13.2, 13.1) },
+    { id: 'yogurt', name: 'Yogurt PIL', unit: 'u', unitLabel: 'pote', category: 'Lácteos', kgEach: 1, aliases: ['yogurt', 'yogur'], prices: P(14.2, 13.5, 13.9, 15, 14.6, 14.8) },
+    { id: 'queso', name: 'Queso criollo', unit: 'kg', unitLabel: 'kg', category: 'Lácteos', kgEach: null, aliases: ['queso', 'queso criollo'], prices: P(52, 49, 50, 46.5, 45.5, 47) },
+    { id: 'detergente', name: 'Detergente Ace', unit: 'u', unitLabel: 'bolsa', category: 'Limpieza', kgEach: 0.8, aliases: ['detergente'], prices: P(18.5, 17.2, 16.9, 19, 18.2, 17.8) },
+    { id: 'cafe', name: 'Café Illimani', unit: 'u', unitLabel: 'bolsa', category: 'Despensa', kgEach: 0.25, aliases: ['cafe', 'café', 'illimani'], prices: P(27.5, 26, 28, 24.5, 25, 26.5) },
+    { id: 'mantequilla', name: 'Mantequilla PIL', unit: 'u', unitLabel: 'pote', category: 'Lácteos', kgEach: 0.1, aliases: ['mantequilla'], prices: P(9.8, 9.4, 9.9, 10.2, 9.7, 10) },
+    { id: 'manzana', name: 'Manzana roja', unit: 'kg', unitLabel: 'kg', category: 'Frutas', kgEach: null, aliases: ['manzana', 'manzanas'], prices: P(16.5, 15.9, 16, 13.5, 14, 14.4) },
+    { id: 'sal', name: 'Sal yodada', unit: 'u', unitLabel: 'bolsa', category: 'Despensa', kgEach: 1, aliases: ['sal', 'sal yodada'], prices: P(2.8, 2.5, 2.6, 2.2, 2.3, 2.4) },
+    { id: 'gaseosa', name: 'Coca-Cola', unit: 'u', unitLabel: 'botella 2 L', category: 'Bebidas', kgEach: 2, aliases: ['gaseosa', 'coca cola', 'coca-cola'], prices: P(12, 12.5, 11.8, 13, 12.8, 12.2) },
+    { id: 'harina', name: 'Harina', unit: 'kg', unitLabel: 'kg', category: 'Despensa', kgEach: null, aliases: ['harina'], prices: P(6.8, 6.5, 6.2, 6.9, 6.6, 6.4) }
   ];
 
   var RECIPES = [
@@ -165,7 +172,7 @@
       id: 'picante',
       name: 'Picante de pollo',
       minutes: 45,
-      note: 'Almuerzo cochabambino para no dejar el pollo en la heladera.',
+      note: 'Almuerzo cruceño para no dejar el pollo en la heladera.',
       ingredients: [
         { key: 'pollo', label: 'Pollo' },
         { key: 'papa', label: 'Papa' },
@@ -379,7 +386,7 @@
         line('Carne molida', 'Proteínas', 0.5, 'kg', 46),
         line('Mantequilla PIL', 'Lácteos', 1, 'pote', 9.9)
       ]),
-      purchase('c-feria', day(0), 'Mercado local', 'Feria de hoy', [
+      purchase('c-feria', day(0), 'Mercado Los Pozos', 'Feria en Los Pozos', [
         line('Papa', 'Verduras', 2, 'kg', 4.5),
         line('Tomate', 'Verduras', 0.7, 'kg', 6.3),
         line('Cebolla', 'Verduras', 0.5, 'kg', 5.2),
@@ -397,10 +404,12 @@
     ];
 
     return {
-      version: 1,
+      version: 2,
       family: {
         surname: 'Rojas',
-        city: 'Cochabamba',
+        city: 'Santa Cruz de la Sierra',
+        neighborhood: 'Barrio Los Pozos',
+        address: 'Barrio Los Pozos, Santa Cruz de la Sierra',
         people: [
           { name: 'Carla', role: 'Mamá' },
           { name: 'Luis', role: 'Papá' },
@@ -433,7 +442,7 @@
           id: 'm-hola',
           role: 'bot',
           at: today,
-          text: '¡Hola, Carla! Soy Yapa. Hoy miré la despensa de la familia Rojas: hay cosas por vencer y otras que ya están cortas. Pregúntame o toca una sugerencia. Tus datos se quedan en este celular.',
+          text: '¡Hola, Carla! Soy Lupe. Hoy miré la despensa de la familia Rojas, en Santa Cruz de la Sierra: hay cosas por vencer y otras que ya están cortas. Pregúntame o toca una sugerencia. Tus datos se quedan en este celular.',
           actions: [
             { label: 'Qué vence pronto', send: '¿Qué está por vencer?' },
             { label: 'Cómo va el presupuesto', send: '¿Cómo va el presupuesto?' }

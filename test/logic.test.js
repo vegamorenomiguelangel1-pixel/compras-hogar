@@ -90,7 +90,7 @@ test('la despensa de muestra tiene los tres estados', function () {
 
 test('comparador señala el local más barato y el ahorro', function () {
   const arroz = D.CATALOG.filter(function (row) { return row.id === 'arroz'; })[0];
-  assert.deepEqual(L.cheapestStores(arroz.prices).map(function (row) { return row.store; }), ['Mercado local']);
+  assert.deepEqual(L.cheapestStores(arroz.prices).map(function (row) { return row.store; }), ['Mercado Los Pozos']);
   assert.equal(L.spread(arroz.prices).save, 2.3);
   const aceite = D.CATALOG.filter(function (row) { return row.id === 'aceite'; })[0];
   assert.equal(L.cheapestStores(aceite.prices)[0].store, 'Hipermaxi');
@@ -138,7 +138,7 @@ test('el asistente responde con datos vivos y sin red', function () {
   const ctx = {
     today: TODAY,
     familyName: 'Rojas',
-    city: 'Cochabamba',
+    city: 'Santa Cruz de la Sierra',
     pantry: seed.pantry,
     shopping: seed.shopping,
     purchases: seed.purchases,
@@ -151,14 +151,20 @@ test('el asistente responde con datos vivos y sin red', function () {
   assert.match(soon.text, /Yogurt|Leche|Pollo/);
   assert.match(soon.text, /no lo consumas/i);
   const price = L.answer('¿Dónde sale más barato el arroz?', ctx);
-  assert.match(price.text, /Mercado local/);
+  assert.match(price.text, /Mercado Los Pozos/);
   assert.match(price.text, /Bs /);
   const budget = L.answer('¿Cómo va el presupuesto?', ctx);
   assert.match(budget.text, /Bs 1\.800,00|1\.800/);
   const salad = L.answer('quiero una ensalada', ctx);
   assert.doesNotMatch(salad.text, /Sal yodada/);
   const hello = L.answer('Hola', ctx);
+  assert.match(hello.text, /Lupe/);
   assert.match(hello.text, /Rojas/);
+  assert.match(hello.text, /Santa Cruz de la Sierra/);
+  const who = L.answer('¿Quién eres?', ctx);
+  assert.match(who.text, /Lupe/);
+  assert.match(who.text, /Los Pozos/);
+  assert.doesNotMatch(who.text, /Yapa|Cochabamba/);
 });
 
 test('la tienda persiste lista, compra, cocinado y presupuesto', function () {
@@ -223,6 +229,34 @@ test('la tienda persiste lista, compra, cocinado y presupuesto', function () {
   Store.reset();
   assert.equal(Store.get().budgetLimit, 1800);
   assert.ok(Store.get().pantry.some(function (row) { return row.id === 'p-queso'; }));
+});
+
+test('los datos guardados de Yapa se reemplazan por la muestra de Lupe', function () {
+  localStorage.setItem('yapa-hogar-v1', JSON.stringify({
+    version: 1,
+    family: { surname: 'Rojas', city: 'Cochabamba', people: [] },
+    group: [],
+    pantry: [{ id: 'viejo', name: 'Queso de Cochabamba' }],
+    shopping: [],
+    purchases: [],
+    waste: [],
+    messages: [{ text: 'Soy Yapa' }]
+  }));
+  localStorage.removeItem('lupe-hogar-v1');
+  Store.reload();
+  const state = Store.get();
+  assert.equal(Store.KEY, 'lupe-hogar-v1');
+  assert.equal(state.version, 2);
+  assert.equal(state.family.city, 'Santa Cruz de la Sierra');
+  assert.equal(state.family.neighborhood, 'Barrio Los Pozos');
+  assert.equal(localStorage.getItem('yapa-hogar-v1'), null);
+  assert.match(state.messages[0].text, /Lupe/);
+  assert.equal(state.pantry.some(function (row) { return row.id === 'viejo'; }), false);
+  assert.equal(state.pantry.some(function (row) { return row.id === 'p-queso'; }), true);
+  const saved = localStorage.getItem(Store.KEY);
+  assert.match(saved, /Mercado Los Pozos/);
+  assert.doesNotMatch(saved, /Cochabamba|Yapa|Mercado local/);
+  assert.deepEqual(D.STORES, ['Hipermaxi', 'Fidalga', 'IC Norte', 'Mercado Los Pozos', 'Mercado Mutualista', 'Abasto']);
 });
 
 test('el chat no crece sin límite', function () {

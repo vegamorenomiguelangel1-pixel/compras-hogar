@@ -1,4 +1,4 @@
-"""Generate PWA icons for Yapa. Run from anywhere."""
+"""Generate PWA icons for Lupe. Run from anywhere."""
 from PIL import Image, ImageDraw, ImageFilter
 import os
 
@@ -50,7 +50,7 @@ def draw_mark(size, maskable=False):
         fill=CREAM,
         width=hw,
     )
-    # Yapa dot
+    # Lupe dot
     r = size * 0.075
     dot = (cx + scale * 0.30, cy - scale * 0.30)
     draw.ellipse((dot[0] - r, dot[1] - r, dot[0] + r, dot[1] + r), fill=AMBER)

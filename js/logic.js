@@ -6,7 +6,7 @@
   'use strict';
 
   var SOON_DAYS = 4;
-  var STORES = ['Hipermaxi', 'Fidalga', 'IC Norte', 'Mercado local'];
+  var STORES = ['Hipermaxi', 'Fidalga', 'IC Norte', 'Mercado Los Pozos', 'Mercado Mutualista', 'Abasto'];
 
   function round2(n) {
     return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
@@ -303,7 +303,7 @@
         kgEach: item.kgEach || (priced.product && priced.product.kgEach) || null,
         reason: reasonFor(st),
         source: 'sugerido',
-        by: 'Yapa',
+        by: 'Lupe',
         level: st.level,
         low: st.low
       });
@@ -502,7 +502,7 @@
 
     if (/^(hola|buenas|buenos dias|buen dia|hey|que tal)\b/.test(q)) {
       return {
-        text: '¡Hola! Soy Yapa, la asistente de la familia ' + (ctx.familyName || 'Rojas') + '. Reviso la despensa, armo la lista y comparo precios en bolivianos. Todo queda en este celular: no envío tus datos a internet.',
+        text: '¡Hola! Soy Lupe, la asistente de la familia ' + (ctx.familyName || 'Rojas') + (ctx.city ? ' en ' + ctx.city : '') + '. Reviso la despensa, armo la lista y comparo precios en bolivianos. Todo queda en este celular: no envío tus datos a internet.',
         actions: [
           { label: 'Qué vence pronto', send: '¿Qué está por vencer?' },
           { label: 'Ver presupuesto', route: 'presupuesto' }
@@ -516,21 +516,21 @@
 
     if (q.indexOf('minimkt') !== -1 || q.indexOf('caso de estudio') !== -1 || q.indexOf('universidad') !== -1 || q.indexOf('prototipo') !== -1) {
       return {
-        text: 'Yapa es un prototipo para un caso de estudio universitario. Toma ideas de Minimkt (stock, alertas, analítica, pedidos recurrentes y asistente) y las adapta a la cocina de un hogar en Bolivia. Los precios son de muestra y no hay conexión con tiendas reales.',
+        text: 'Lupe es un prototipo para un caso de estudio universitario. Toma ideas de Minimkt (stock, alertas, analítica, pedidos recurrentes y asistente) y las adapta a la cocina de un hogar en Santa Cruz de la Sierra. Los precios son de muestra y no hay conexión con tiendas reales.',
         actions: [{ label: 'Acerca del proyecto', route: 'acerca' }]
       };
     }
 
-    if (q.indexOf('quien eres') !== -1 || q.indexOf('que eres') !== -1 || q === 'yapa' || q.indexOf('que es yapa') !== -1 || q.indexOf('que significa') !== -1) {
+    if (q.indexOf('quien eres') !== -1 || q.indexOf('que eres') !== -1 || q === 'lupe' || q.indexOf('que es lupe') !== -1 || q.indexOf('que significa') !== -1) {
       return {
-        text: 'Yapa es esa porción extra que te dan en el mercado. Aquí es una ayuda para comprar mejor y botar menos comida. Funciono con reglas en tu celular, sin una API externa.',
+        text: 'Soy Lupe, la ayuda de compras de la casa. Reviso la despensa, armo la lista y comparo Hipermaxi, Fidalga, IC Norte, Mercado Los Pozos, Mercado Mutualista y Abasto. Funciono con reglas en tu celular, sin una API externa.',
         actions: [{ label: 'Cómo funciona', send: '¿Cómo funciona la app?' }]
       };
     }
 
     if (q.indexOf('como funciona') !== -1 || q.indexOf('ayuda') !== -1 || q.indexOf('que puedes') !== -1) {
       return {
-        text: 'Puedo hacer esto, siempre con los datos guardados en este navegador:\n· Despensa: cantidades, vencimiento y stock bajo.\n· Lista: sugiere lo que falta y deja anotar pedidos de la familia.\n· Precios: compara Hipermaxi, Fidalga, IC Norte y el mercado local.\n· Presupuesto: lo gastado del mes frente a tu límite.\n· Anti-desperdicio: recetas para lo que está por vencer.\nPregúntame por un producto, por ejemplo: ¿dónde sale más barato el arroz?',
+        text: 'Puedo hacer esto, siempre con los datos guardados en este navegador:\n· Despensa: cantidades, vencimiento y stock bajo.\n· Lista: sugiere lo que falta y deja anotar pedidos de la familia.\n· Precios: compara Hipermaxi, Fidalga, IC Norte, Mercado Los Pozos, Mercado Mutualista y Abasto.\n· Presupuesto: lo gastado del mes frente a tu límite.\n· Anti-desperdicio: recetas para lo que está por vencer.\nPregúntame por un producto, por ejemplo: ¿dónde sale más barato el arroz?',
         actions: [
           { label: 'Ver despensa', route: 'despensa' },
           { label: 'Comparar precios', route: 'precios' }
@@ -605,7 +605,7 @@
 
     if (q.indexOf('tip') !== -1 || q.indexOf('consejo') !== -1 || q.indexOf('ahorr') !== -1) {
       return {
-        text: 'Tres hábitos que ayudan en casa:\n· Compara feria y supermercado: la verdura suele salir mejor en el mercado local.\n· El domingo mira qué vence esta semana y arma el menú con eso.\n· No repongas un producto por vencer si todavía tienes bastante: primero cocínalo.\n· Anota la compra apenas llegas, así el presupuesto no se escapa.',
+        text: 'Tres hábitos que ayudan en casa:\n· Compara feria y supermercado: la verdura suele salir mejor en Mercado Los Pozos o Mercado Mutualista, y la carne a veces en Abasto.\n· El domingo mira qué vence esta semana y arma el menú con eso.\n· No repongas un producto por vencer si todavía tienes bastante: primero cocínalo.\n· Anota la compra apenas llegas, así el presupuesto no se escapa.',
         actions: [{ label: 'Comparar precios', route: 'precios' }]
       };
     }
@@ -620,7 +620,7 @@
     var asksPrice = q.indexOf('precio') !== -1 || q.indexOf('barat') !== -1 || q.indexOf('caro') !== -1
       || q.indexOf('conviene') !== -1 || q.indexOf('donde') !== -1 || q.indexOf('hipermaxi') !== -1
       || q.indexOf('fidalga') !== -1 || q.indexOf('norte') !== -1 || q.indexOf('mercado') !== -1
-      || q.indexOf('feria') !== -1 || q.indexOf('cancha') !== -1 || q.indexOf('compr') !== -1;
+      || q.indexOf('feria') !== -1 || q.indexOf('pozos') !== -1 || q.indexOf('mutualista') !== -1 || q.indexOf('abasto') !== -1 || q.indexOf('compr') !== -1;
 
     if (products.length && (asksPrice || q.indexOf('cuanto') !== -1)) {
       var body = products.slice(0, 3).map(priceAnswer).join('\n\n');
@@ -635,7 +635,7 @@
         ? summary.ranked[0].store + ' tiene el menor precio en ' + summary.ranked[0].count + ' de ' + catalog.length + ' productos de la muestra.'
         : 'Todavía no hay precios cargados.';
       return {
-        text: lead + ' Si compras una unidad de cada producto en su local más barato, la canasta sale ' + money(basket.cheap) + ' frente a ' + money(basket.pricey) + ' comprando siempre en el más caro. Diferencia: ' + money(basket.save) + '.\n\nEn la vida real la feria gana en papa, tomate y fruta; el súper a veces gana con aceite, fideos o atún en oferta.',
+        text: lead + ' Si compras una unidad de cada producto en su local más barato, la canasta sale ' + money(basket.cheap) + ' frente a ' + money(basket.pricey) + ' comprando siempre en el más caro. Diferencia: ' + money(basket.save) + '.\n\nEn Santa Cruz la feria de Los Pozos y Mutualista suele ganar en papa, tomate y fruta; Abasto a veces conviene en carne, y el súper gana con aceite, fideos o atún en oferta.',
         actions: [{ label: 'Ver comparador', route: 'precios' }]
       };
     }
@@ -645,7 +645,7 @@
       var ideasBuy = suggestions(pantry, ctx.shopping || [], catalog, today);
       var names = pending.slice(0, 6).map(function (item) { return '· ' + item.name + ' (' + (item.by || 'familia') + ')'; }).join('\n');
       return {
-        text: 'En la lista hay ' + pending.length + ' productos por comprar' + (pending.length ? ':\n' + names : '.') + '\n\nYapa sugiere reponer ' + ideasBuy.length + ' ítems que están bajos o por vencer. La lista se siente familiar porque cada pedido lleva el nombre de quien lo anotó. En este prototipo no se sincroniza con otros celulares.',
+        text: 'En la lista hay ' + pending.length + ' productos por comprar' + (pending.length ? ':\n' + names : '.') + '\n\nLupe sugiere reponer ' + ideasBuy.length + ' ítems que están bajos o por vencer. La lista se siente familiar porque cada pedido lleva el nombre de quien lo anotó. En este prototipo no se sincroniza con otros celulares.',
         actions: [{ label: 'Abrir lista', route: 'lista' }]
       };
     }

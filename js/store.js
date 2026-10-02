@@ -5,7 +5,8 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var KEY = 'yapa-hogar-v1';
+  var KEY = 'lupe-hogar-v1';
+  var LEGACY_KEYS = ['yapa-hogar-v1'];
   var state = null;
 
   function L() { return globalThis.YapaLogic; }
@@ -16,7 +17,7 @@
       var raw = localStorage.getItem(KEY);
       if (!raw) return null;
       var data = JSON.parse(raw);
-      if (!data || data.version !== 1) return null;
+      if (!data || data.version !== 2) return null;
       if (!Array.isArray(data.pantry) || !Array.isArray(data.shopping) || !Array.isArray(data.purchases)) return null;
       if (!Array.isArray(data.waste) || !Array.isArray(data.messages)) return null;
       if (!data.family || !Array.isArray(data.group)) return null;
@@ -35,8 +36,15 @@
     }
   }
 
+  function dropLegacy() {
+    LEGACY_KEYS.forEach(function (key) {
+      try { localStorage.removeItem(key); } catch (err) { /* la clave vieja ya no se usa */ }
+    });
+  }
+
   function init() {
     if (state) return state;
+    dropLegacy();
     state = read() || D().buildSeed(L().todayISO());
     write();
     return state;
@@ -217,7 +225,7 @@
       unitLabel: suggestion.unitLabel,
       price: suggestion.price,
       source: 'sugerido',
-      by: 'Yapa',
+      by: 'Lupe',
       reason: suggestion.reason,
       productId: suggestion.productId,
       kgEach: suggestion.kgEach
@@ -250,7 +258,7 @@
       unitLabel: product.unitLabel,
       price: best ? best.price : 0,
       source: 'comparador',
-      by: 'Yapa',
+      by: 'Lupe',
       reason: best ? 'Precio más bajo en ' + best.store : 'Desde el comparador',
       productId: product.id,
       kgEach: product.kgEach

@@ -1,19 +1,19 @@
-# Yapa — compras del hogar
+# Lupe — compras del hogar
 
 Sitio en vivo: https://vegamorenomiguelangel1-pixel.github.io/compras-hogar/
 
 Prototipo de **App de Gestión Inteligente de Compras para Hogares**, pensado como caso de estudio universitario en Bolivia.
 
-Yapa ayuda a una familia a cuidar la despensa, armar la lista, comparar precios en bolivianos y botar menos comida. El nombre viene de la *yapa*: esa porción extra que dan en el mercado. La familia de ejemplo es la familia Rojas, de Cochabamba. Los precios están en **Bs** y los locales de la muestra son **Hipermaxi**, **Fidalga**, **IC Norte** y el **mercado local**.
+Lupe ayuda a una familia a cuidar la despensa, armar la lista, comparar precios en bolivianos y botar menos comida. La familia de ejemplo es la familia Rojas, del barrio Los Pozos, en Santa Cruz de la Sierra. Los precios están en **Bs**. Los locales de la muestra son **Hipermaxi**, **Fidalga**, **IC Norte**, **Mercado Los Pozos**, **Mercado Mutualista** y **Abasto**.
 
-El referente de clase es Minimkt (minimarket chileno con stock, alertas, analítica, pedidos recurrentes y asistente). Yapa adapta esas ideas a la cocina de una casa. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.
+El referente de clase es Minimkt (minimarket chileno con stock, alertas, analítica, pedidos recurrentes y asistente). Lupe adapta esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.
 
 ## Funciones
 
 1. **Inicio.** Resumen de alertas, presupuesto del mes y ahorro por comida que no se botó.
 2. **Despensa.** Cantidad, categoría y vencimiento. El estado se pinta como vencido, por vencer o bien, y avisa si el stock está bajo.
 3. **Lista de compras.** Sugiere lo que está bajo o por vencer, deja anotar pedidos de la familia, marcar lo del carrito y ver el total estimado.
-4. **Comparador.** El mismo producto en cuatro locales, con el más barato y cuánto se ahorra.
+4. **Comparador.** El mismo producto en seis locales, con el más barato y cuánto se ahorra.
 5. **Presupuesto.** Tope mensual, registro de compras y gasto por categoría.
 6. **Anti-desperdicio.** Recetas de un recetario local para lo que está por vencer, y un contador de Bs y kg estimados. Lo ya vencido no se cocina.
 7. **Asistente.** Chat con respuestas por reglas (preguntas frecuentes, precios y tips). No usa claves ni APIs externas.
