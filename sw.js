@@ -1,4 +1,4 @@
-var CACHE = 'yapa-shell-v2';
+var CACHE = 'yapa-shell-v3';
 var ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ var ASSETS = [
   './js/logic.js',
   './js/data.js',
   './js/store.js',
+  './js/cloud.js',
   './js/app.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
@@ -37,6 +38,11 @@ self.addEventListener('fetch', function (event) {
   var req = event.request;
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
+  // Firebase (SDK en gstatic y API en googleapis) no se guarda en este caché:
+  // una respuesta vieja de Auth o Firestore dejaría la sync rota.
+  if (url.hostname.indexOf('googleapis.com') !== -1) return;
+  if (url.hostname.indexOf('gstatic.com') !== -1) return;
+  if (url.hostname.indexOf('firebase') !== -1) return;
   if (url.origin !== self.location.origin) return;
   event.respondWith(fetch(req).then(function (res) {
     if (res && res.ok) {

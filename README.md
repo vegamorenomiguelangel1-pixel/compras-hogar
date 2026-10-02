@@ -8,7 +8,7 @@ Yapa ayuda a una familia a cuidar la despensa, armar la lista, comparar precios 
 
 El referente de clase es Minimkt (minimarket chileno con stock, alertas, analítica, pedidos recurrentes y asistente). Yapa adapta esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.
 
-Al abrir, Yapa pide el nombre y un código de familia (el de ejemplo es `ROJAS-2026`) o deja crear una familia y genera el código. En este navegador, quien entra con el mismo código ve la misma despensa y la misma lista. No hay sincronización entre dispositivos: eso pediría un servidor.
+Al abrir, Yapa pide el nombre y un código de familia (el de ejemplo es `ROJAS-2026`) o deja crear una familia y genera el código. Quien entra con el mismo código, en este celular o en otro, ve la misma despensa, la misma lista y el mismo presupuesto. La sincronización usa Firebase (plan Spark): sesión anónima y un documento por familia en Firestore. Si no hay red, queda la copia de `localStorage` y el indicador pasa a **Sin conexión**.
 
 ## Funciones
 
@@ -21,7 +21,7 @@ Al abrir, Yapa pide el nombre y un código de familia (el de ejemplo es `ROJAS-2
 7. **Asistente.** Chat con respuestas por reglas (preguntas frecuentes, precios y tips). No usa claves ni APIs externas.
 8. **Acerca del proyecto.** Explica el prototipo y deja un lugar para los nombres del grupo.
 
-Todo se guarda en `localStorage` de este navegador. Se puede instalar como PWA (manifest y service worker) y, después de la primera visita, abre sin conexión.
+Cada familia vive en Firestore, en `familias/{codigo}`, y también en `localStorage` de este navegador. Se puede instalar como PWA (manifest y service worker) y, después de la primera visita, abre sin conexión.
 
 ## Cómo ejecutarlo
 
@@ -47,6 +47,19 @@ node --test test/logic.test.js
 
 Para volver a los datos de ejemplo de la familia en curso: **Más → Restablecer datos de ejemplo**. Para salir: **Cerrar sesión**.
 
+## Firebase
+
+El proyecto `yapa-compras` usa Authentication anónima y Firestore. El modo de prueba de Firestore dura unos **30 días** y después deja de aceptar lecturas y escrituras abiertas.
+
+Cuando venza, publica las reglas del archivo `firestore.rules`:
+
+1. Abre la [consola de Firebase](https://console.firebase.google.com/) del proyecto `yapa-compras`.
+2. Entra a **Firestore Database → Reglas**.
+3. Pega el contenido de `firestore.rules`.
+4. Pulsa **Publicar**.
+
+Esas reglas dejan leer y escribir `familias/{codigo}` solo a quien ya inició sesión (la sesión anónima de la app cuenta). Sin sesión, no. El código de la familia es lo que comparten los celulares. El service worker no intercepta las llamadas a `googleapis.com` ni a `gstatic.com`.
+
 ## GitHub Pages
 
 La publicación usa GitHub Actions (no Jekyll). El workflow está en `.github/workflows/deploy.yml` y despliega con `actions/deploy-pages`. Las rutas son relativas, así el sitio funciona en:
@@ -69,8 +82,10 @@ La primera vez, GitHub puede pedir permiso para crear el entorno `github-pages`.
 - `css/styles.css` — interfaz mobile-first
 - `js/logic.js` — reglas (vencimiento, precios, recetas, asistente)
 - `js/data.js` — catálogo, recetas y datos de ejemplo
-- `js/store.js` — `localStorage`
+- `js/store.js` — `localStorage` y sincronización con Firestore
+- `js/cloud.js` — Firebase (CDN, módulos) 
 - `js/app.js` — pantallas
+- `firestore.rules` — reglas para pegar en la consola cuando venza el modo de prueba
 - `manifest.webmanifest`, `sw.js`, `icons/`, `fonts/` — PWA y tipografía Outfit (OFL)
 
 ## Nota

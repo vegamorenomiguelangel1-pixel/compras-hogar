@@ -70,10 +70,72 @@
     }
   }
 
+  var applyingRemote = false;
+  var remoteHook = null;
+  var statusHook = null;
+  var syncMode = 'syncing';
+
+  function cloud() {
+    var remote = globalThis.YapaCloud;
+    return remote && remote.available ? remote : null;
+  }
+
+  function familyBody(data) {
+    var copy = JSON.parse(JSON.stringify(data || {}));
+    delete copy.updatedAt;
+    return copy;
+  }
+
+  function sameFamily(a, b) {
+    if (!a || !b) return false;
+    return JSON.stringify(familyBody(a)) === JSON.stringify(familyBody(b));
+  }
+
+  function stamp(data) {
+    var copy = JSON.parse(JSON.stringify(data));
+    copy.updatedAt = new Date().toISOString();
+    return copy;
+  }
+
+  function noteStatus(next) {
+    if (syncMode === next) return;
+    syncMode = next;
+    if (statusHook) statusHook(syncMode);
+  }
+
+  function publish() {
+    var remote = cloud();
+    if (!remote || !active || !state || applyingRemote) return;
+    noteStatus(typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'syncing');
+    remote.save(active.code, stamp(state)).then(function () {
+      noteStatus(typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'synced');
+    }).catch(function () {
+      noteStatus('offline');
+    });
+  }
+
+  function applyRemote(data) {
+    if (!active || !validFamily(data)) return;
+    if (sameFamily(state, data)) {
+      noteStatus(typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'synced');
+      return;
+    }
+    applyingRemote = true;
+    state = data;
+    if (!Array.isArray(state.joined)) state.joined = [];
+    vault.families[active.code] = state;
+    writeVault();
+    applyingRemote = false;
+    noteStatus(typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'synced');
+    if (remoteHook) remoteHook();
+  }
+
   function write() {
     if (!vault || !active || !state) return false;
     vault.families[active.code] = state;
-    return writeVault();
+    var ok = writeVault();
+    if (!applyingRemote) publish();
+    return ok;
   }
 
   function dropLegacy() {
@@ -112,6 +174,28 @@
       writeSession();
     }
     return active;
+  }
+
+  function attachCloud() {
+    var remote = cloud();
+    if (!remote) {
+      noteStatus(typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'local');
+      return;
+    }
+    if (!active || !state) {
+      remote.ready().then(function () {
+        noteStatus(typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : remote.status());
+      }).catch(function () { noteStatus('offline'); });
+      return;
+    }
+    var code = active.code;
+    remote.ready().then(function () {
+      remote.watch(code, applyRemote);
+      return remote.load(code);
+    }).then(function (remoteData) {
+      if (validFamily(remoteData)) applyRemote(remoteData);
+      else publish();
+    }).catch(function () { noteStatus('offline'); });
   }
 
   function init() {
@@ -203,10 +287,127 @@
   }
 
   function logout() {
+    var remote = cloud();
+    if (remote && remote.unwatch) remote.unwatch();
     active = null;
     state = null;
     writeSession();
     return { ok: true };
+  }
+
+  function activate(id, name, family) {
+    active = { code: id, name: name };
+    state = family;
+    vault.families[id] = family;
+    writeVault();
+    writeSession();
+  }
+
+  function watchCurrent() {
+    var remote = cloud();
+    if (remote && active) remote.watch(active.code, applyRemote);
+  }
+
+  function enter(name, code) {
+    var person = cleanName(name);
+    if (person.error) return Promise.resolve({ ok: false, error: person.error });
+    var id = normalizeCode(code);
+    if (id.length < 4) return Promise.resolve({ ok: false, error: 'Escribe el código de la familia. Por ejemplo, ROJAS-2026.' });
+    if (!vault) init();
+    var remote = cloud();
+    if (!remote) return Promise.resolve(login(name, id));
+    return remote.ready().then(function () {
+      return remote.claim(id, function (current) {
+        var family = validFamily(current) ? current : null;
+        if (!family && id === DEMO_CODE) {
+          family = seedFamily('Rojas');
+          family.family.surname = 'Rojas';
+        }
+        if (!family && validFamily(vault.families[id])) family = JSON.parse(JSON.stringify(vault.families[id]));
+        if (!validFamily(family)) return null;
+        remember(family, person.value);
+        return stamp(family);
+      });
+    }).then(function (family) {
+      if (!validFamily(family)) return { ok: false, error: 'Ese código no existe. Créalo o revísalo.' };
+      activate(id, person.value, family);
+      watchCurrent();
+      noteStatus('synced');
+      return { ok: true, code: id, name: person.value, saved: true };
+    }).catch(function () {
+      noteStatus('offline');
+      if (id === DEMO_CODE) ensureDemo();
+      var local = login(name, id);
+      if (!local.ok) return { ok: false, error: 'No hay conexión y ese código no está guardado en este celular.' };
+      watchCurrent();
+      return local;
+    });
+  }
+
+  function firstFreeCode(stem, year, n) {
+    var code = n === 1 ? stem + '-' + year : stem + '-' + year + '-' + n;
+    var remote = cloud();
+    if (!remote) return Promise.resolve(code);
+    if (n > 20) return Promise.resolve(code);
+    return remote.load(code).then(function (data) {
+      if (validFamily(data) || validFamily(vault.families[code])) return firstFreeCode(stem, year, n + 1);
+      return code;
+    });
+  }
+
+  function startFamily(name, surname) {
+    var person = cleanName(name);
+    if (person.error) return Promise.resolve({ ok: false, error: person.error });
+    var label = titleCase(surname);
+    if (label.length < 2) return Promise.resolve({ ok: false, error: 'Escribe el apellido de la familia.' });
+    if (label.length > 40) return Promise.resolve({ ok: false, error: 'El apellido es demasiado largo.' });
+    var stem = L().norm(label).replace(/[^a-z0-9]/g, '').toUpperCase();
+    if (stem.length < 3) return Promise.resolve({ ok: false, error: 'El apellido necesita al menos 3 letras.' });
+    stem = stem.slice(0, 12);
+    if (!vault) init();
+    var remote = cloud();
+    if (!remote) return Promise.resolve(createFamily(name, surname));
+    var year = String(L().todayISO()).slice(0, 4);
+    var family = seedFamily(label);
+    remember(family, person.value);
+    return remote.ready().then(function () {
+      return firstFreeCode(stem, year, 1);
+    }).then(function (code) {
+      return remote.claim(code, function (current) {
+        if (validFamily(current)) return false;
+        return stamp(family);
+      }).then(function (saved) {
+        if (saved === false) return firstFreeCode(stem, year, 2).then(function (nextCode) {
+          return remote.claim(nextCode, function (current) {
+            if (validFamily(current)) return false;
+            return stamp(family);
+          }).then(function (again) {
+            if (!validFamily(again)) return { ok: false, error: 'No se pudo crear la familia.' };
+            activate(nextCode, person.value, again);
+            watchCurrent();
+            noteStatus('synced');
+            return { ok: true, code: nextCode, name: person.value, saved: true };
+          });
+        });
+        if (!validFamily(saved)) return { ok: false, error: 'No se pudo crear la familia.' };
+        activate(code, person.value, saved);
+        watchCurrent();
+        noteStatus('synced');
+        return { ok: true, code: code, name: person.value, saved: true };
+      });
+    }).catch(function () {
+      noteStatus('offline');
+      return createFamily(name, surname);
+    });
+  }
+
+  function syncStatus() {
+    var remote = cloud();
+    if (!remote) return typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : syncMode;
+    var live = remote.status ? remote.status() : syncMode;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return 'offline';
+    if (syncMode === 'syncing') return 'syncing';
+    return live || syncMode;
   }
 
   function reset() {
@@ -611,6 +812,12 @@
     session: session,
     login: login,
     createFamily: createFamily,
+    enter: enter,
+    startFamily: startFamily,
+    attachCloud: attachCloud,
+    syncStatus: syncStatus,
+    onRemote: function (fn) { remoteHook = fn; },
+    onStatus: function (fn) { statusHook = fn; },
     logout: logout,
     reload: reload,
     get: get,

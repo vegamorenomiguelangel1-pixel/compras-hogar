@@ -240,7 +240,7 @@
       ? joined.map(function (person) { return who(person) + ' ' + esc(person); }).join(' ')
       : 'Nadie más entró todavía.';
     return '<section class="hero"><div class="hero-brand">' + logoMark() + '<span>Yapa</span></div><h1>Hola, ' + esc(name) + '</h1><p>' + esc(L.formatLong(m.today)) + '</p><p>' + esc(place) + '</p><p class="hero-code">Código ' + esc(code) + '</p><p>Menos desperdicio, más yapa para la casa.</p></section>'
-      + '<div class="card session-card"><p class="meta">En este navegador</p><strong>' + esc(name) + '</strong><p class="meta">Familia ' + esc(m.state.family.surname) + ' · ' + esc(code) + '</p><div class="joined">' + joinedLine + '</div><button class="btn ghost" type="button" data-action="logout">Cerrar sesión</button></div>'
+      + '<div class="card session-card"><p class="meta">Familia en la nube ' + syncPill() + '</p><strong>' + esc(name) + '</strong><p class="meta">Familia ' + esc(m.state.family.surname) + ' · ' + esc(code) + '</p><div class="joined">' + joinedLine + '</div><button class="btn ghost" type="button" data-action="logout">Cerrar sesión</button></div>'
       + '<div class="stack">' + banner
       + '<div class="stats">'
       + stat(m.soon.length, 'Por vencer', 'desperdicio')
@@ -252,7 +252,7 @@
       + '</div>'
       + (soonCards ? '<div class="section-title"><h2>Usar pronto</h2><button class="linkish" type="button" data-action="go" data-route="desperdicio">Recetas</button></div><div class="scroller">' + soonCards + '</div>' : '')
       + '<div class="section-title"><h2>Lista familiar</h2><button class="linkish" type="button" data-action="go" data-route="lista">Abrir</button></div>'
-      + '<div class="card"><p class="meta">Yapa sugiere reponer ' + m.suggestions.length + ' productos.</p>' + (listPreview || '<p class="meta">No hay pedidos pendientes.</p>') + '<p class="note">Por comprar: ' + esc(L.money(L.listTotal(m.state.shopping, false))) + '. Cada pedido muestra quién lo anotó. Quien entre con ' + esc(code) + ' en este navegador ve la misma lista.</p></div>';
+      + '<div class="card"><p class="meta">Yapa sugiere reponer ' + m.suggestions.length + ' productos.</p>' + (listPreview || '<p class="meta">No hay pedidos pendientes.</p>') + '<p class="note">Por comprar: ' + esc(L.money(L.listTotal(m.state.shopping, false))) + '. Cada pedido muestra quién lo anotó. Quien entre con ' + esc(code) + ' en otro celular ve la misma lista.</p></div>';
   }
 
   function stat(value, label, dest) {
@@ -302,7 +302,7 @@
       }).join('');
     }
     var suggestTotal = L.round2(m.suggestions.reduce(function (sum, row) { return sum + row.qty * row.price; }, 0));
-    return '<div class="card"><div class="split"><div class="avatars" aria-hidden="true">' + people + '</div><span class="grow"><strong>Familia ' + esc(m.state.family.surname) + '</strong><p class="meta">Código ' + esc(session ? session.code : '') + ' · Entraron: ' + esc(whoJoined) + '</p></span></div><p class="note">Por comprar ' + esc(L.money(L.listTotal(m.state.shopping, false))) + ' · En el carrito ' + esc(L.money(L.listTotal(m.state.shopping, true))) + '. Lo que agregues queda a tu nombre.</p></div>'
+    return '<div class="card"><div class="split"><div class="avatars" aria-hidden="true">' + people + '</div><span class="grow"><strong>Familia ' + esc(m.state.family.surname) + '</strong><p class="meta">Código ' + esc(session ? session.code : '') + ' · Entraron: ' + esc(whoJoined) + '</p></span></div><p class="note">Por comprar ' + esc(L.money(L.listTotal(m.state.shopping, false))) + ' · En el carrito ' + esc(L.money(L.listTotal(m.state.shopping, true))) + '. Lo que agregues queda a tu nombre y se ve en los otros celulares con este código.</p></div>'
       + '<div class="section-title"><h2>Sugerencias</h2>' + (m.suggestions.length ? '<button class="linkish" type="button" data-action="add-all">Agregar todas</button>' : '') + '</div>'
       + '<div class="stack">' + (ideas || '<div class="card"><p class="meta">No hay reposiciones urgentes. La despensa está tranquila o ya pasaste las sugerencias a la lista.</p></div>') + '</div>'
       + (m.suggestions.length ? '<p class="note">Si agregas todas, suman cerca de ' + esc(L.money(suggestTotal)) + ' al precio más bajo de la muestra.</p>' : '')
@@ -410,9 +410,9 @@
     }).join('');
     var home = m.state.family;
     var where = home.address || [home.neighborhood, home.city].filter(Boolean).join(', ');
-    return '<div class="about stack"><div class="card"><div class="hero-brand">' + logoMark() + '<strong>Yapa</strong></div><p>Prototipo para el caso de estudio <strong>App de Gestión Inteligente de Compras para Hogares</strong>. La familia Rojas vive en ' + esc(where) + '. Es un ejemplo ficticio. El código de muestra es <strong>ROJAS-2026</strong>.</p><p>Compara precios en <strong>Hipermaxi</strong>, <strong>Fidalga</strong>, <strong>IC Norte</strong>, <strong>Mercado Los Pozos</strong>, <strong>Mercado Mutualista</strong> y <strong>Abasto</strong>.</p><p>El referente de clase es Minimkt, un minimarket chileno con control de stock, alertas, analítica, pedidos recurrentes y asistente. Yapa pasa esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.</p><p>El inicio de sesión guarda cada familia en este navegador. Quien escribe el mismo código en este celular ve los mismos datos. Para sincronizar de verdad entre dispositivos haría falta un servidor, por ejemplo Firebase o Supabase.</p></div>'
+    return '<div class="about stack"><div class="card"><div class="hero-brand">' + logoMark() + '<strong>Yapa</strong></div><p>Prototipo para el caso de estudio <strong>App de Gestión Inteligente de Compras para Hogares</strong>. La familia Rojas vive en ' + esc(where) + '. Es un ejemplo ficticio. El código de muestra es <strong>ROJAS-2026</strong>.</p><p>Compara precios en <strong>Hipermaxi</strong>, <strong>Fidalga</strong>, <strong>IC Norte</strong>, <strong>Mercado Los Pozos</strong>, <strong>Mercado Mutualista</strong> y <strong>Abasto</strong>.</p><p>El referente de clase es Minimkt, un minimarket chileno con control de stock, alertas, analítica, pedidos recurrentes y asistente. Yapa pasa esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.</p><p>El mismo código sincroniza la despensa, la lista, el presupuesto y los integrantes entre celulares con Firebase. Si no hay internet, Yapa sigue con la copia de este navegador y marca Sin conexión. Al volver la red, los cambios se envían solos.</p></div>'
       + '<ul class="map"><li><strong>Stock de Minimkt</strong><span>Despensa con cantidad, mínimo y vencimiento.</span></li><li><strong>Alertas de quiebre</strong><span>Avisos de stock bajo, por vencer y vencido.</span></li><li><strong>Analítica</strong><span>Presupuesto del mes y gasto por categoría.</span></li><li><strong>Pedidos recurrentes</strong><span>Sugerencias y lista con pedidos de la familia.</span></li><li><strong>Asistente</strong><span>Respuestas por reglas, con los datos de tu despensa, sin clave de API.</span></li></ul>'
-      + '<div class="card"><h2>Integrantes del grupo</h2><p class="meta">Completa los nombres. Se guardan solo en este navegador, como el resto de Yapa.</p>' + members + '<p class="note">Tecnología: HTML, CSS y JavaScript. Los datos viven en localStorage, separados por código de familia. Se puede instalar como PWA y, después de la primera visita, abre sin conexión. Pensada para publicarse en GitHub Pages con rutas relativas.</p></div></div>';
+      + '<div class="card"><h2>Integrantes del grupo</h2><p class="meta">Completa los nombres. Se guardan con la familia, en este navegador y en la nube.</p>' + members + '<p class="note">Tecnología: HTML, CSS y JavaScript, con Firebase (Auth anónima y Firestore) para sincronizar. localStorage queda como copia sin conexión. Se puede instalar como PWA. Pensada para publicarse en GitHub Pages con rutas relativas.</p></div></div>';
   }
 
   function renderTopbar(name, m) {
@@ -432,7 +432,7 @@
     if (name === 'despensa') action = '<button class="icon-btn" type="button" data-action="open-add-pantry" aria-label="Agregar producto">' + icon('plus') + '</button>';
     var session = Store.session();
     var whoNow = session ? session.name + ' · ' + session.code : 'Yapa';
-    bar.innerHTML = '<div class="topbar-row">' + back + '<div class="grow"><p class="eyebrow">' + esc(whoNow) + '</p><h1>' + esc(TITLES[name]) + '</h1></div><span class="top-side">' + action + '</span></div>';
+    bar.innerHTML = '<div class="topbar-row">' + back + '<div class="grow"><p class="eyebrow">' + esc(whoNow) + '</p><h1>' + esc(TITLES[name]) + '</h1></div><span class="top-side">' + syncPill() + action + '</span></div>';
   }
 
   function renderTabs(name, m) {
@@ -463,6 +463,25 @@
     acerca: viewAcerca
   };
 
+  function syncPill() {
+    var status = Store.syncStatus ? Store.syncStatus() : 'syncing';
+    var label = status === 'synced' ? 'Sincronizado' : status === 'syncing' ? 'Sincronizando' : 'Sin conexión';
+    var klass = status === 'synced' ? 'is-on' : status === 'syncing' ? 'is-wait' : 'is-off';
+    return '<span class="sync ' + klass + '" data-sync>' + esc(label) + '</span>';
+  }
+
+  function paintSync() {
+    var status = Store.syncStatus ? Store.syncStatus() : 'offline';
+    var label = status === 'synced' ? 'Sincronizado' : status === 'syncing' ? 'Sincronizando' : 'Sin conexión';
+    var klass = status === 'synced' ? 'is-on' : status === 'syncing' ? 'is-wait' : 'is-off';
+    document.querySelectorAll('[data-sync]').forEach(function (el) {
+      el.textContent = label;
+      el.className = 'sync ' + klass;
+    });
+    var banner = document.getElementById('offline');
+    if (banner) banner.hidden = navigator.onLine;
+  }
+
   function signedIn() {
     return !!(Store.session() && Store.get());
   }
@@ -486,14 +505,14 @@
         + '<button class="btn" type="submit">Crear familia</button><p class="form-error" hidden></p></form>'
         + '<button class="btn ghost" type="button" data-action="auth-mode" data-mode="login">Ya tengo un código</button>'
       : '<form data-action="auth-login">' + field('Tu nombre', '<input name="name" required maxlength="40" autocomplete="name" placeholder="Carla">')
-        + field('Código de familia', '<input name="code" required maxlength="24" autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="ROJAS-2026">', 'La familia de ejemplo ya está en este navegador: ROJAS-2026.')
+        + field('Código de familia', '<input name="code" required maxlength="24" autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="ROJAS-2026">', 'La familia de ejemplo es ROJAS-2026. El mismo código sirve en otro celular.')
         + '<button class="btn" type="submit">Iniciar sesión</button><p class="form-error" hidden></p></form>'
         + '<button class="btn ghost" type="button" data-action="auth-mode" data-mode="create">Crear familia</button>';
     var heading = creating ? 'Crear familia' : 'Iniciar sesión';
     var lead = creating
-      ? 'Elige tu nombre y el apellido de la casa. Yapa arma un código para que, en este navegador, otros entren a la misma despensa.'
-      : 'Entra con tu nombre y el código de tu casa. En este navegador, el mismo código abre la misma despensa.';
-    view.innerHTML = '<section class="gate"><div class="hero-brand">' + logoMark() + '<span>Yapa</span></div><h1>' + heading + '</h1><p>' + lead + '</p>' + form + '</section>';
+      ? 'Elige tu nombre y el apellido de la casa. Yapa arma un código para compartir la despensa entre celulares.'
+      : 'Entra con tu nombre y el código de tu casa. El mismo código en otro celular abre la misma despensa.';
+    view.innerHTML = '<section class="gate"><div class="hero-brand">' + logoMark() + '<span>Yapa</span></div>' + syncPill() + '<h1>' + heading + '</h1><p>' + lead + '</p>' + form + '</section>';
     document.getElementById('offline').hidden = navigator.onLine;
     var theme = document.querySelector('meta[name="theme-color"]');
     if (theme) theme.setAttribute('content', '#F4F1EA');
@@ -728,22 +747,24 @@
   }
 
   function handleForm(action, data, form) {
-    if (action === 'auth-login') {
-      var entered = Store.login(data.name, data.code);
-      if (!entered.ok) {
-        showFormError(entered.error);
-        return;
-      }
-      toast('Hola, ' + entered.name + '.');
-      go('inicio');
-    } else if (action === 'auth-create') {
-      var created = Store.createFamily(data.name, data.surname);
-      if (!created.ok) {
-        showFormError(created.error);
-        return;
-      }
-      toast('Familia creada. El código es ' + created.code + '.');
-      go('inicio');
+    if (action === 'auth-login' || action === 'auth-create') {
+      var submit = form.querySelector('button[type="submit"]');
+      if (submit) submit.disabled = true;
+      var pending = action === 'auth-login'
+        ? Store.enter(data.name, data.code)
+        : Store.startFamily(data.name, data.surname);
+      pending.then(function (result) {
+        if (submit) submit.disabled = false;
+        if (!result || !result.ok) {
+          showFormError((result && result.error) || 'No se pudo entrar.');
+          return;
+        }
+        toast(action === 'auth-login' ? 'Hola, ' + result.name + '.' : 'Familia creada. El código es ' + result.code + '.');
+        go('inicio');
+      }).catch(function () {
+        if (submit) submit.disabled = false;
+        showFormError('No se pudo conectar. Intenta de nuevo.');
+      });
     } else if (action === 'save-pantry') {
       var id = form && form.dataset.id;
       finish(id ? Store.updatePantry(id, data) : Store.addPantry(data), id ? 'Producto actualizado.' : 'Producto agregado a la despensa.');
@@ -785,7 +806,7 @@
       Store.logout();
       closeSheet();
       ui.authMode = 'login';
-      toast('Sesión cerrada. Los datos siguen en este navegador.');
+      toast('Sesión cerrada. La familia sigue en la nube y en este celular.');
       render();
     } else if (action === 'go') go(el.dataset.route);
     else if (action === 'close-sheet') closeSheet();
@@ -838,7 +859,16 @@
   }
 
   function boot() {
+    if (boot.started) {
+      if (Store.attachCloud) Store.attachCloud();
+      paintSync();
+      return;
+    }
+    boot.started = true;
     Store.init();
+    if (Store.onRemote) Store.onRemote(function () { render(); });
+    if (Store.onStatus) Store.onStatus(paintSync);
+    if (Store.attachCloud) Store.attachCloud();
     var app = document.getElementById('app');
     app.addEventListener('click', onClick);
     app.addEventListener('submit', function (event) {
@@ -877,8 +907,8 @@
       el.click();
     });
     window.addEventListener('hashchange', render);
-    window.addEventListener('online', render);
-    window.addEventListener('offline', render);
+    window.addEventListener('online', paintSync);
+    window.addEventListener('offline', paintSync);
     if (!location.hash) history.replaceState(null, '', '#/inicio');
     render();
     if ('serviceWorker' in navigator) {
@@ -886,5 +916,8 @@
     }
   }
 
-  boot();
+  window.addEventListener('yapa-cloud-ready', boot);
+  window.addEventListener('yapa-cloud-failed', boot);
+  if (window.YapaCloud) boot();
+  window.setTimeout(boot, 8000);
 })();

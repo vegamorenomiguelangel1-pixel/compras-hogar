@@ -99,6 +99,30 @@ img { max-width: 100%; }
 .session-card strong { display: block; font-size: 1.2rem; margin-top: 2px; }
 .joined { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 10px 0 4px; }
 .hero-code { font-weight: 700; }
+.sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 8px 0 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e7f6ef;
+  color: #0a5c40;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.sync.is-off { background: #fde8e4; color: #9e2b1f; }
+.sync.is-wait { background: #fff4d6; color: #8a5400; }
+.sync::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.top-side { display: flex; align-items: center; gap: 8px; }
+.top-side .sync { margin: 0; }
 
 .topbar {
   position: sticky;
