@@ -92,9 +92,27 @@ img { max-width: 100%; }
 .view.has-composer { padding-bottom: calc(var(--nav) + env(safe-area-inset-bottom) + 148px); }
 .view.has-fab { padding-bottom: calc(var(--nav) + env(safe-area-inset-bottom) + 96px); }
 .view.is-gate { padding-top: 18px; padding-bottom: 32px; }
-.gate { display: grid; gap: 10px; }
-.gate h1 { margin: 12px 0 0; font-size: 1.85rem; letter-spacing: -0.03em; }
-.gate > p { margin: 0 0 8px; color: var(--muted); }
+.gate { display: grid; gap: 10px; justify-items: center; }
+.gate-logo {
+  display: block;
+  height: clamp(140px, 44vw, 180px);
+  width: auto;
+  max-width: 100%;
+  margin: 6px auto 0;
+  object-fit: contain;
+}
+.gate-word {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-align: center;
+}
+.gate h1 { margin: 8px 0 0; font-size: 1.85rem; letter-spacing: -0.03em; text-align: center; }
+.gate > .lead { margin: 0 0 8px; color: var(--muted); text-align: center; }
+.gate form, .gate .btn { width: 100%; }
 .session-card { margin-top: 12px; }
 .session-card strong { display: block; font-size: 1.2rem; margin-top: 2px; }
 .joined { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 10px 0 4px; }
@@ -167,8 +185,9 @@ img { max-width: 100%; }
 .hero-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
 .hero h1 { font-size: 2rem; margin-top: 14px; }
 .hero p { margin: 6px 0 0; color: rgba(255, 255, 255, 0.88); }
-.mark { width: 36px; height: 36px; display: block; }
-.top-mark .mark { width: 40px; height: 40px; }
+.mark { width: auto; height: 40px; display: block; object-fit: contain; }
+.top-mark .mark { height: 44px; }
+.hero .mark { height: 52px; }
 
 .offline {
   margin: 0;

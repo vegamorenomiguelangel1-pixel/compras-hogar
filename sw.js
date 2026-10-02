@@ -1,4 +1,4 @@
-var CACHE = 'yapa-shell-v3';
+var CACHE = 'yapa-shell-v4';
 var ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ var ASSETS = [
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
+  './icons/yapa-logo.png',
   './fonts/outfit-400.woff2',
   './fonts/outfit-500.woff2',
   './fonts/outfit-600.woff2',
