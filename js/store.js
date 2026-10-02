@@ -5,55 +5,218 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var KEY = 'yapa-hogar-v1';
+  var KEY = 'yapa-hogar-v2';
+  var SESSION_KEY = 'yapa-session-v2';
+  var LEGACY_KEYS = ['yapa-hogar-v1', 'lupe-hogar-v1'];
+  var DEMO_CODE = 'ROJAS-2026';
+  var vault = null;
+  var active = null;
   var state = null;
 
   function L() { return globalThis.YapaLogic; }
   function D() { return globalThis.YapaData; }
 
-  function read() {
+  function validFamily(data) {
+    return !!(data
+      && Array.isArray(data.pantry)
+      && Array.isArray(data.shopping)
+      && Array.isArray(data.purchases)
+      && Array.isArray(data.waste)
+      && Array.isArray(data.messages)
+      && data.family
+      && Array.isArray(data.group));
+  }
+
+  function readVault() {
     try {
       var raw = localStorage.getItem(KEY);
       if (!raw) return null;
       var data = JSON.parse(raw);
-      if (!data || data.version !== 1) return null;
-      if (!Array.isArray(data.pantry) || !Array.isArray(data.shopping) || !Array.isArray(data.purchases)) return null;
-      if (!Array.isArray(data.waste) || !Array.isArray(data.messages)) return null;
-      if (!data.family || !Array.isArray(data.group)) return null;
+      if (!data || data.version !== 2 || !data.families || typeof data.families !== 'object') return null;
       return data;
     } catch (err) {
       return null;
     }
   }
 
-  function write() {
+  function writeVault() {
     try {
-      localStorage.setItem(KEY, JSON.stringify(state));
+      localStorage.setItem(KEY, JSON.stringify(vault));
       return true;
     } catch (err) {
       return false;
     }
   }
 
+  function writeSession() {
+    try {
+      if (!active) localStorage.removeItem(SESSION_KEY);
+      else localStorage.setItem(SESSION_KEY, JSON.stringify(active));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function readSession() {
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !data.code || !data.name) return null;
+      return { code: String(data.code), name: String(data.name) };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function write() {
+    if (!vault || !active || !state) return false;
+    vault.families[active.code] = state;
+    return writeVault();
+  }
+
+  function dropLegacy() {
+    LEGACY_KEYS.forEach(function (key) {
+      try { localStorage.removeItem(key); } catch (err) { /* la clave vieja ya no se usa */ }
+    });
+  }
+
+  function seedFamily(surname) {
+    var data = D().buildSeed(L().todayISO());
+    data.version = 2;
+    data.joined = [];
+    if (surname) data.family.surname = surname;
+    return data;
+  }
+
+  function ensureDemo() {
+    if (validFamily(vault.families[DEMO_CODE])) return;
+    var demo = seedFamily('Rojas');
+    demo.family.surname = 'Rojas';
+    vault.families[DEMO_CODE] = demo;
+  }
+
+  function load() {
+    dropLegacy();
+    vault = readVault() || { version: 2, families: {} };
+    ensureDemo();
+    writeVault();
+    var saved = readSession();
+    if (saved && validFamily(vault.families[saved.code])) {
+      active = saved;
+      state = vault.families[saved.code];
+    } else {
+      active = null;
+      state = null;
+      writeSession();
+    }
+    return active;
+  }
+
   function init() {
-    if (state) return state;
-    state = read() || D().buildSeed(L().todayISO());
-    write();
+    if (vault) return state;
+    load();
     return state;
   }
 
   function reload() {
+    vault = null;
+    active = null;
     state = null;
     return init();
   }
 
   function get() {
-    return state || init();
+    if (!vault) init();
+    return state;
+  }
+
+  function session() {
+    if (!vault) init();
+    return active;
+  }
+
+  function cleanName(name) {
+    var clean = String(name || '').trim().replace(/\s+/g, ' ');
+    if (clean.length < 2) return { error: 'Escribe tu nombre.' };
+    if (clean.length > 40) return { error: 'El nombre es demasiado largo.' };
+    return { value: clean };
+  }
+
+  function normalizeCode(code) {
+    return String(code || '').trim().toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9-]/g, '');
+  }
+
+  function remember(family, name) {
+    if (!Array.isArray(family.joined)) family.joined = [];
+    var key = L().norm(name);
+    var found = family.joined.some(function (row) { return L().norm(row.name) === key; });
+    if (!found) family.joined.push({ name: name, at: L().todayISO() });
+  }
+
+  function login(name, code) {
+    var person = cleanName(name);
+    if (person.error) return { ok: false, error: person.error };
+    var id = normalizeCode(code);
+    if (id.length < 4) return { ok: false, error: 'Escribe el código de la familia. Por ejemplo, ROJAS-2026.' };
+    if (!vault) init();
+    var family = vault.families[id];
+    if (!validFamily(family)) return { ok: false, error: 'Ese código no está en este navegador. Créalo o revísalo.' };
+    remember(family, person.value);
+    active = { code: id, name: person.value };
+    state = family;
+    var saved = write() && writeSession();
+    return { ok: true, code: id, name: person.value, saved: saved };
+  }
+
+  function titleCase(value) {
+    return String(value || '').trim().replace(/\s+/g, ' ').replace(/(^|\s)\S/g, function (chunk) {
+      return chunk.toUpperCase();
+    });
+  }
+
+  function createFamily(name, surname) {
+    var person = cleanName(name);
+    if (person.error) return { ok: false, error: person.error };
+    var label = titleCase(surname);
+    if (label.length < 2) return { ok: false, error: 'Escribe el apellido de la familia.' };
+    if (label.length > 40) return { ok: false, error: 'El apellido es demasiado largo.' };
+    var stem = L().norm(label).replace(/[^a-z0-9]/g, '').toUpperCase();
+    if (stem.length < 3) return { ok: false, error: 'El apellido necesita al menos 3 letras.' };
+    stem = stem.slice(0, 12);
+    if (!vault) init();
+    var year = String(L().todayISO()).slice(0, 4);
+    var code = stem + '-' + year;
+    var n = 2;
+    while (vault.families[code]) {
+      code = stem + '-' + year + '-' + n;
+      n += 1;
+    }
+    var family = seedFamily(label);
+    remember(family, person.value);
+    vault.families[code] = family;
+    active = { code: code, name: person.value };
+    state = family;
+    var saved = write() && writeSession();
+    return { ok: true, code: code, name: person.value, saved: saved };
+  }
+
+  function logout() {
+    active = null;
+    state = null;
+    writeSession();
+    return { ok: true };
   }
 
   function reset() {
-    try { localStorage.removeItem(KEY); } catch (err) { /* sigue en memoria */ }
-    state = D().buildSeed(L().todayISO());
+    if (!active || !state) return null;
+    var joined = Array.isArray(state.joined) ? state.joined.slice() : [];
+    var surname = state.family && state.family.surname ? state.family.surname : 'Rojas';
+    var next = seedFamily(surname);
+    next.joined = joined;
+    vault.families[active.code] = next;
+    state = next;
     write();
     return state;
   }
@@ -191,7 +354,7 @@
         price: L().round2(price),
         checked: false,
         source: fields.source || 'manual',
-        by: fields.by || 'Yo',
+        by: fields.by || (active && active.name) || 'Yo',
         reason: fields.reason || 'Anotado a mano',
         productId: product ? product.id : (fields.productId || null),
         kgEach: fields.kgEach != null ? fields.kgEach : (product ? product.kgEach : null)
@@ -217,7 +380,7 @@
       unitLabel: suggestion.unitLabel,
       price: suggestion.price,
       source: 'sugerido',
-      by: 'Yapa',
+      by: (active && active.name) || 'Yo',
       reason: suggestion.reason,
       productId: suggestion.productId,
       kgEach: suggestion.kgEach
@@ -250,7 +413,7 @@
       unitLabel: product.unitLabel,
       price: best ? best.price : 0,
       source: 'comparador',
-      by: 'Yapa',
+      by: (active && active.name) || 'Yo',
       reason: best ? 'Precio más bajo en ' + best.store : 'Desde el comparador',
       productId: product.id,
       kgEach: product.kgEach
@@ -442,7 +605,13 @@
 
   return {
     KEY: KEY,
+    SESSION_KEY: SESSION_KEY,
+    DEMO_CODE: DEMO_CODE,
     init: init,
+    session: session,
+    login: login,
+    createFamily: createFamily,
+    logout: logout,
     reload: reload,
     get: get,
     reset: reset,
