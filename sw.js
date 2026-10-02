@@ -1,4 +1,4 @@
-var CACHE = 'yapa-shell-v5';
+var CACHE = 'yapa-shell-v7';
 var ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ var ASSETS = [
   './js/data.js',
   './js/store.js',
   './js/cloud.js',
+  './js/i18n.js',
   './js/app.js',
   './manifest.webmanifest',
   './icons/icon-192.png',

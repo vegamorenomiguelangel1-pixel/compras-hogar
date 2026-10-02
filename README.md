@@ -84,9 +84,16 @@ La primera vez, GitHub puede pedir permiso para crear el entorno `github-pages`.
 - `js/data.js` — catálogo, recetas y datos de ejemplo
 - `js/store.js` — `localStorage` y sincronización con Firestore
 - `js/cloud.js` — Firebase (CDN, módulos) 
+- `js/i18n.js` — textos de la interfaz (castellano, aymara, quechua y guaraní)
 - `js/app.js` — pantallas
 - `firestore.rules` — reglas para pegar en la consola cuando venza el modo de prueba
 - `manifest.webmanifest`, `sw.js`, `icons/`, `fonts/` — PWA y tipografía Outfit (OFL)
+
+## Idiomas
+
+La interfaz está en castellano (el idioma de entrada), aymara, quechua sureño boliviano y guaraní boliviano. El selector está en el ingreso y en Acerca, y la elección queda en `localStorage` de este navegador (`yapa-lang`). No forma parte de los datos de la familia ni se sincroniza con Firebase.
+
+El aymara, el quechua y el guaraní son una primera versión y conviene que los revise una persona hablante. Donde no había una palabra segura se dejó el castellano, porque en Bolivia es habitual mezclarlos. El nombre Yapa no se traduce.
 
 ## Nota
 
