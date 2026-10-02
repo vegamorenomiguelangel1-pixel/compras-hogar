@@ -1,5 +1,7 @@
 # Yapa — compras del hogar
 
+Sitio en vivo: https://vegamorenomiguelangel1-pixel.github.io/compras-hogar/
+
 Prototipo de **App de Gestión Inteligente de Compras para Hogares**, pensado como caso de estudio universitario en Bolivia.
 
 Yapa ayuda a una familia a cuidar la despensa, armar la lista, comparar precios en bolivianos y botar menos comida. El nombre viene de la *yapa*: esa porción extra que dan en el mercado. La familia de ejemplo es la familia Rojas, de Cochabamba. Los precios están en **Bs** y los locales de la muestra son **Hipermaxi**, **Fidalga**, **IC Norte** y el **mercado local**.
