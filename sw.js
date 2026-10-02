@@ -1,4 +1,4 @@
-var CACHE = 'yapa-shell-v4';
+var CACHE = 'yapa-shell-v5';
 var ASSETS = [
   './',
   './index.html',
