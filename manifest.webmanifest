@@ -1,0 +1,33 @@
+{
+  "id": "./",
+  "name": "Yapa — Compras del hogar",
+  "short_name": "Yapa",
+  "description": "Gestión inteligente de compras para hogares en Bolivia. Prototipo académico.",
+  "lang": "es-BO",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4F1EA",
+  "theme_color": "#0E7A56",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
