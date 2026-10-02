@@ -74,7 +74,7 @@
   }
 
   function logoMark() {
-    return '<svg class="mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#0E7A56"/><path d="M15 23h18l-1.3 11.4a3 3 0 0 1-3 2.6H19.3a3 3 0 0 1-3-2.6L15 23z" fill="#F6F3EC"/><path d="M19 23c0-4.2 2.1-7 5-7s5 2.8 5 7" fill="none" stroke="#F6F3EC" stroke-width="2.4" stroke-linecap="round"/><circle cx="33.5" cy="16" r="3.2" fill="#E8A317"/></svg>';
+    return '<img class="mark" src="icons/yapa-logo.png" alt="" width="694" height="1024">';
   }
 
   function route() {
@@ -512,7 +512,7 @@
     var lead = creating
       ? 'Elige tu nombre y el apellido de la casa. Yapa arma un código para compartir la despensa entre celulares.'
       : 'Entra con tu nombre y el código de tu casa. El mismo código en otro celular abre la misma despensa.';
-    view.innerHTML = '<section class="gate"><div class="hero-brand">' + logoMark() + '<span>Yapa</span></div>' + syncPill() + '<h1>' + heading + '</h1><p>' + lead + '</p>' + form + '</section>';
+    view.innerHTML = '<section class="gate"><img class="gate-logo" src="icons/yapa-logo.png" alt="Yapa" width="694" height="1024"><p class="gate-word" aria-hidden="true">Yapa</p>' + syncPill() + '<h1>' + heading + '</h1><p class="lead">' + lead + '</p>' + form + '</section>';
     document.getElementById('offline').hidden = navigator.onLine;
     var theme = document.querySelector('meta[name="theme-color"]');
     if (theme) theme.setAttribute('content', '#F4F1EA');
