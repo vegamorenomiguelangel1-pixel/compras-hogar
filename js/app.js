@@ -29,8 +29,8 @@
     asistente: 'mas',
     acerca: 'mas'
   };
-  var PEOPLE = { Yapa: '#0E7A56', Carla: '#9E2B1F', Luis: '#185A8C', Ana: '#8A5400', Mateo: '#6D28D9', Yo: '#0E7A56' };
-  var PALETTE = ['#0E7A56', '#9E2B1F', '#185A8C', '#8A5400', '#6D28D9', '#0F6E6E'];
+  var PEOPLE = { Yapa: '#1F7A44', Carla: '#B33A28', Luis: '#185A8C', Ana: '#8A5400', Mateo: '#6D28D9', Yo: '#1F7A44' };
+  var PALETTE = ['#1F7A44', '#B33A28', '#185A8C', '#8A5400', '#6D28D9', '#0F6E6E'];
   var QUICK = ['quick.expire', 'quick.buy', 'quick.rice', 'quick.budget', 'quick.tip'];
   var ui = {
     qPantry: '',
@@ -173,7 +173,7 @@
     if (!box) return;
     var m = model();
     var rows = L.filterPantry(m.state.pantry, { query: ui.qPantry, filter: ui.pantryFilter, today: m.today });
-    box.innerHTML = rows.length ? rows.map(function (item) { return pantryCard(item, m.today); }).join('') : empty('Sin resultados', 'Prueba otro filtro o agrega el producto con el botón verde.');
+    box.innerHTML = rows.length ? rows.map(function (item) { return pantryCard(item, m.today); }).join('') : empty('Sin resultados', 'Prueba otro filtro o agrega el producto con el botón naranja.');
   }
 
   function priceCard(product, shopping) {
@@ -271,7 +271,7 @@
       var on = ui.pantryFilter === row[0] ? ' on' : '';
       return '<button type="button" class="' + on + '" data-action="pantry-filter" data-filter="' + row[0] + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + row[1] + ' ' + counts[row[0]] + '</button>';
     }).join('');
-    return '<div class="stack"><input id="q-pantry" class="search" type="search" placeholder="' + esc(t('search.pantry')) + '" value="' + esc(ui.qPantry) + '" autocomplete="off" aria-label="' + esc(t('search.pantry')) + '"><div class="filters" role="toolbar">' + filters + '</div><div id="pantry-list" class="stack"></div><p class="note">El color marca el estado: vencido, por vencer (en ' + L.SOON_DAYS + ' días) o bien. El aviso azul es stock bajo, cuando la cantidad llega al mínimo.</p></div>'
+    return '<div class="stack"><input id="q-pantry" class="search" type="search" placeholder="' + esc(t('search.pantry')) + '" value="' + esc(ui.qPantry) + '" autocomplete="off" aria-label="' + esc(t('search.pantry')) + '"><div class="filters" role="toolbar">' + filters + '</div><div id="pantry-list" class="stack"></div><p class="note">El color marca el estado: rojo si está vencido, amarillo si vence pronto (en ' + L.SOON_DAYS + ' días) y verde si está bien. El aviso de stock bajo aparece cuando la cantidad llega al mínimo.</p></div>'
       + '<button class="fab" type="button" data-action="open-add-pantry" aria-label="' + esc(t('aria.addProduct')) + '">' + icon('plus') + '</button>';
   }
 
@@ -525,7 +525,7 @@
     paintChrome();
     document.getElementById('offline').hidden = navigator.onLine;
     var theme = document.querySelector('meta[name="theme-color"]');
-    if (theme) theme.setAttribute('content', '#F4F1EA');
+    if (theme) theme.setAttribute('content', '#FFF8EE');
     document.title = 'Yapa · ' + heading;
   }
 
@@ -551,7 +551,7 @@
     paintChrome();
     document.getElementById('offline').hidden = navigator.onLine;
     var theme = document.querySelector('meta[name="theme-color"]');
-    if (theme) theme.setAttribute('content', name === 'inicio' ? '#0E7A56' : '#F4F1EA');
+    if (theme) theme.setAttribute('content', name === 'inicio' ? '#1F7A44' : '#FFF8EE');
     document.title = 'Yapa · ' + t('title.' + name);
     if (name === 'despensa') paintPantryList();
     if (name === 'precios') paintPriceList();
