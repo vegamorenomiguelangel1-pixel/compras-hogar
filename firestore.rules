@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // El código de familia es el secreto compartido. Cualquier sesión
+    // anónima puede leer y escribir esa casa; sin sesión, no.
+    match /familias/{codigo} {
+      allow read: if request.auth != null
+        && codigo.matches('^[A-Z0-9-]{4,32}$');
+      allow create, update: if request.auth != null
+        && codigo.matches('^[A-Z0-9-]{4,32}$')
+        && request.resource.data.family is map
+        && request.resource.data.pantry is list
+        && request.resource.data.shopping is list
+        && request.resource.data.joined is list;
+      allow delete: if false;
+    }
+  }
+}

@@ -645,7 +645,7 @@
       var ideasBuy = suggestions(pantry, ctx.shopping || [], catalog, today);
       var names = pending.slice(0, 6).map(function (item) { return '· ' + item.name + ' (' + (item.by || 'familia') + ')'; }).join('\n');
       return {
-        text: 'En la lista hay ' + pending.length + ' productos por comprar' + (pending.length ? ':\n' + names : '.') + '\n\nYapa sugiere reponer ' + ideasBuy.length + ' ítems que están bajos o por vencer. Cada pedido lleva el nombre de quien lo anotó. En este navegador, el mismo código de familia ve la misma lista. Entre celulares distintos no se sincroniza.',
+        text: 'En la lista hay ' + pending.length + ' productos por comprar' + (pending.length ? ':\n' + names : '.') + '\n\nYapa sugiere reponer ' + ideasBuy.length + ' ítems que están bajos o por vencer. Cada pedido lleva el nombre de quien lo anotó. Con el mismo código, la lista se sincroniza entre celulares cuando hay internet.',
         actions: [{ label: 'Abrir lista', route: 'lista' }]
       };
     }
