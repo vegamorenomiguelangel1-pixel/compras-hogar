@@ -68,7 +68,7 @@
   }
 
   function logoMark() {
-    return '<img class="mark" src="icons/yapa-logo.png" alt="" width="694" height="1024">';
+    return '<img class="mark" src="icons/yapa-logo.png" alt="" width="704" height="842">';
   }
 
   function route() {
@@ -521,7 +521,7 @@
         + '<button class="btn ghost" type="button" data-action="auth-mode" data-mode="create">' + esc(t('login.create')) + '</button>';
     var heading = creating ? t('login.create') : t('login.in');
     var lead = creating ? t('login.leadCreate') : t('login.leadIn');
-    view.innerHTML = '<section class="gate"><img class="gate-logo" src="icons/yapa-logo.png" alt="Yapa" width="694" height="1024"><p class="gate-word" aria-hidden="true">Yapa</p>' + langSwitch() + syncPill() + '<h1>' + esc(heading) + '</h1><p class="lead">' + esc(lead) + '</p>' + form + '</section>';
+    view.innerHTML = '<section class="gate"><img class="gate-logo" src="icons/yapa-logo.png" alt="Yapa" width="704" height="842"><p class="gate-word" aria-hidden="true">Yapa</p>' + langSwitch() + syncPill() + '<h1>' + esc(heading) + '</h1><p class="lead">' + esc(lead) + '</p>' + form + '</section>';
     paintChrome();
     document.getElementById('offline').hidden = navigator.onLine;
     var theme = document.querySelector('meta[name="theme-color"]');
