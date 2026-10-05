@@ -63,22 +63,65 @@
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   }
 
+  function tr(key, vars, fallback) {
+    var g = typeof globalThis !== 'undefined' ? globalThis : null;
+    var api = g && g.YapaI18n;
+    if (api && typeof api.t === 'function') {
+      var value = api.t(key, vars);
+      if (value && value !== key) return value;
+    }
+    if (typeof fallback === 'function') return fallback();
+    return fallback == null ? '' : fallback;
+  }
+
+  function knownText(text) {
+    var g = typeof globalThis !== 'undefined' ? globalThis : null;
+    var api = g && g.YapaI18n;
+    if (api && typeof api.known === 'function') return api.known(text);
+    return text;
+  }
+
+  function act(key, fallback, extra) {
+    var row = { label: tr(key, null, fallback) };
+    if (extra && extra.route) row.route = extra.route;
+    if (extra && extra.send) row.send = extra.send;
+    return row;
+  }
+
+  function hasI18n() {
+    var g = typeof globalThis !== 'undefined' ? globalThis : null;
+    return !!(g && g.YapaI18n);
+  }
+
   function formatLong(iso) {
     var d = parseISO(iso);
     if (!d) return '';
-    return cap(d.toLocaleDateString('es-BO', { weekday: 'long', day: 'numeric', month: 'long' }));
+    if (!hasI18n()) return cap(d.toLocaleDateString('es-BO', { weekday: 'long', day: 'numeric', month: 'long' }));
+    return cap(tr('date.long', {
+      weekday: tr('day.' + d.getDay()),
+      day: String(d.getDate()),
+      month: tr('month.' + d.getMonth())
+    }));
   }
 
   function formatShort(iso) {
     var d = parseISO(iso);
     if (!d) return '';
-    return d.toLocaleDateString('es-BO', { day: 'numeric', month: 'short' });
+    if (!hasI18n()) return d.toLocaleDateString('es-BO', { day: 'numeric', month: 'short' });
+    return tr('date.short', {
+      day: String(d.getDate()),
+      month: tr('month.s' + d.getMonth())
+    });
   }
 
   function monthLabel(today) {
     var d = parseISO(monthKey(today) + '-01');
     if (!d) return '';
-    return cap(d.toLocaleDateString('es-BO', { month: 'long', year: 'numeric' }));
+    if (!hasI18n()) return cap(d.toLocaleDateString('es-BO', { month: 'long', year: 'numeric' }));
+    return cap(tr('month.label', {
+      month: tr('month.' + d.getMonth()),
+      year: String(d.getFullYear())
+    }));
   }
 
   function money(n) {
@@ -146,14 +189,16 @@
   }
 
   function expiryLabel(days) {
-    if (days == null) return 'Sin fecha de vencimiento';
+    if (days == null) return tr('expiry.none', null, 'Sin fecha de vencimiento');
     if (days < 0) {
       var n = Math.abs(days);
-      return n === 1 ? 'Venció ayer' : 'Venció hace ' + n + ' días';
+      return n === 1
+        ? tr('expiry.yesterday', null, 'Venció ayer')
+        : tr('expiry.ago', { n: n }, 'Venció hace ' + n + ' días');
     }
-    if (days === 0) return 'Vence hoy';
-    if (days === 1) return 'Vence mañana';
-    return 'Vence en ' + days + ' días';
+    if (days === 0) return tr('expiry.today', null, 'Vence hoy');
+    if (days === 1) return tr('expiry.tomorrow', null, 'Vence mañana');
+    return tr('expiry.in', { n: days }, 'Vence en ' + days + ' días');
   }
 
   function statusRank(st) {
@@ -476,14 +521,17 @@
     var best = cheapestStores(product.prices);
     var high = priciest(product.prices);
     var span = spread(product.prices);
+    var cheapWord = tr('price.cheap', null, 'más barato');
     var lines = Object.keys(product.prices).map(function (store) {
-      var mark = best.some(function (row) { return row.store === store; }) ? ' · más barato' : '';
+      var mark = best.some(function (row) { return row.store === store; }) ? ' · ' + cheapWord : '';
       return '· ' + store + ': ' + money(product.prices[store]) + mark;
     });
-    var where = best.map(function (row) { return row.store; }).join(' y ');
+    var where = best.map(function (row) { return row.store; }).join(' ' + tr('word.and', null, 'y') + ' ');
+    var unit = product.unitLabel || 'unidad';
     var extra = span.save > 0 && high
-      ? ' Si lo compras en ' + where + ' en vez de ' + high.store + ', ahorras ' + money(span.save) + ' por ' + (product.unitLabel || 'unidad') + '.'
-      : ' El precio es el mismo en los locales de la muestra.';
+      ? tr('bot.priceSave', { where: where, store: high.store, money: money(span.save), unit: unit },
+        ' Si lo compras en ' + where + ' en vez de ' + high.store + ', ahorras ' + money(span.save) + ' por ' + unit + '.')
+      : tr('bot.priceSame', null, ' El precio es el mismo en los locales de la muestra.');
     return product.name + ' (' + (product.unitLabel || product.unit) + '):\n' + lines.join('\n') + '\n' + extra;
   }
 
@@ -497,43 +545,49 @@
     var recipes = ctx.recipes || [];
 
     if (!q) {
-      return { text: 'Escribe una pregunta o toca una sugerencia.', actions: actions };
+      return { text: tr('bot.empty', null, 'Escribe una pregunta o toca una sugerencia.'), actions: actions };
     }
 
     if (/^(hola|buenas|buenos dias|buen dia|hey|que tal)\b/.test(q)) {
+      var cityBit = ctx.city ? tr('bot.city', { city: ctx.city }, ' en ' + ctx.city) : '';
+      var family = ctx.familyName || 'Rojas';
       return {
-        text: '¡Hola! Soy Yapa, la asistente de la familia ' + (ctx.familyName || 'Rojas') + (ctx.city ? ' en ' + ctx.city : '') + '. Reviso la despensa, armo la lista y comparo precios en bolivianos. Todo queda en este celular: no envío tus datos a internet.',
+        text: tr('bot.hello', { family: family, city: cityBit },
+          '¡Hola! Soy Yapa, la asistente de la familia ' + family + (ctx.city ? ' en ' + ctx.city : '') + '. Reviso la despensa, armo la lista y comparo precios en bolivianos. Todo queda en este celular: no envío tus datos a internet.'),
         actions: [
-          { label: 'Qué vence pronto', send: '¿Qué está por vencer?' },
-          { label: 'Ver presupuesto', route: 'presupuesto' }
+          act('act.soon', 'Qué vence pronto', { send: '¿Qué está por vencer?' }),
+          act('act.budget', 'Ver presupuesto', { route: 'presupuesto' })
         ]
       };
     }
 
     if (q.indexOf('gracias') !== -1) {
-      return { text: 'Con gusto. Si quieres, te armo la lista con lo que está bajo o por vencer.', actions: [{ label: 'Armar lista', route: 'lista' }] };
+      return {
+        text: tr('bot.thanks', null, 'Con gusto. Si quieres, te armo la lista con lo que está bajo o por vencer.'),
+        actions: [act('act.list', 'Armar lista', { route: 'lista' })]
+      };
     }
 
     if (q.indexOf('minimkt') !== -1 || q.indexOf('caso de estudio') !== -1 || q.indexOf('universidad') !== -1 || q.indexOf('prototipo') !== -1) {
       return {
-        text: 'Yapa es un prototipo para un caso de estudio universitario. Toma ideas de Minimkt (stock, alertas, analítica, pedidos recurrentes y asistente) y las adapta a la cocina de un hogar en Santa Cruz de la Sierra. Los precios son de muestra y no hay conexión con tiendas reales.',
-        actions: [{ label: 'Acerca del proyecto', route: 'acerca' }]
+        text: tr('bot.study', null, 'Yapa es un prototipo para un caso de estudio universitario. Toma ideas de Minimkt (stock, alertas, analítica, pedidos recurrentes y asistente) y las adapta a la cocina de un hogar en Santa Cruz de la Sierra. Los precios son de muestra y no hay conexión con tiendas reales.'),
+        actions: [act('act.about', 'Acerca del proyecto', { route: 'acerca' })]
       };
     }
 
     if (q.indexOf('quien eres') !== -1 || q.indexOf('que eres') !== -1 || q === 'yapa' || q.indexOf('que es yapa') !== -1 || q.indexOf('que significa') !== -1) {
       return {
-        text: 'Yapa es esa porción extra que te dan en el mercado. Aquí ayudo a comprar mejor en Santa Cruz de la Sierra: comparo Hipermaxi, Fidalga, IC Norte, Mercado Los Pozos, Mercado Mutualista y Abasto. Funciono con reglas en tu celular, sin una API externa.',
-        actions: [{ label: 'Cómo funciona', send: '¿Cómo funciona la app?' }]
+        text: tr('bot.who', null, 'Yapa es esa porción extra que te dan en el mercado. Aquí ayudo a comprar mejor en Santa Cruz de la Sierra: comparo Hipermaxi, Fidalga, IC Norte, Mercado Los Pozos, Mercado Mutualista y Abasto. Funciono con reglas en tu celular, sin una API externa.'),
+        actions: [act('act.how', 'Cómo funciona', { send: '¿Cómo funciona la app?' })]
       };
     }
 
     if (q.indexOf('como funciona') !== -1 || q.indexOf('ayuda') !== -1 || q.indexOf('que puedes') !== -1) {
       return {
-        text: 'Puedo hacer esto, siempre con los datos guardados en este navegador:\n· Despensa: cantidades, vencimiento y stock bajo.\n· Lista: sugiere lo que falta y deja anotar pedidos de la familia.\n· Precios: compara Hipermaxi, Fidalga, IC Norte, Mercado Los Pozos, Mercado Mutualista y Abasto.\n· Presupuesto: lo gastado del mes frente a tu límite.\n· Anti-desperdicio: recetas para lo que está por vencer.\nPregúntame por un producto, por ejemplo: ¿dónde sale más barato el arroz?',
+        text: tr('bot.help', null, 'Puedo hacer esto, siempre con los datos guardados en este navegador:\n· Despensa: cantidades, vencimiento y stock bajo.\n· Lista: sugiere lo que falta y deja anotar pedidos de la familia.\n· Precios: compara Hipermaxi, Fidalga, IC Norte, Mercado Los Pozos, Mercado Mutualista y Abasto.\n· Presupuesto: lo gastado del mes frente a tu límite.\n· Anti-desperdicio: recetas para lo que está por vencer.\nPregúntame por un producto, por ejemplo: ¿dónde sale más barato el arroz?'),
         actions: [
-          { label: 'Ver despensa', route: 'despensa' },
-          { label: 'Comparar precios', route: 'precios' }
+          act('act.pantry', 'Ver despensa', { route: 'despensa' }),
+          act('act.prices', 'Comparar precios', { route: 'precios' })
         ]
       };
     }
@@ -548,30 +602,39 @@
           var st = statusOf(item, today);
           return '· ' + item.name + ' — ' + expiryLabel(st.days);
         })
-        : '· Nada por vencer en los próximos ' + SOON_DAYS + ' días.';
+        : tr('bot.soonNone', { days: SOON_DAYS }, '· Nada por vencer en los próximos ' + SOON_DAYS + ' días.');
+      var expHead = tr('bot.expiredHead', null, 'Ya venció, no lo consumas:');
       var expLines = expired.length
-        ? '\n\nYa venció, no lo consumas:\n' + linesOf(expired, function (item) { return '· ' + item.name; })
+        ? '\n\n' + expHead + '\n' + linesOf(expired, function (item) { return '· ' + item.name; })
         : '';
       var recipeHint = '';
       var matched = matchRecipes(pantry, recipes, today);
       if (matched.length) {
-        recipeHint = '\n\nUna receta que aprovecha lo que está por vencer: ' + matched[0].recipe.name + '.';
+        var recipeName = knownText(matched[0].recipe.name);
+        recipeHint = tr('bot.recipeHint', { name: recipeName }, '\n\nUna receta que aprovecha lo que está por vencer: ' + matched[0].recipe.name + '.');
       }
+      var soonBody = soonLines + expLines + recipeHint;
       return {
-        text: 'Productos por vencer:\n' + soonLines + expLines + recipeHint,
-        actions: [{ label: 'Ver recetas', route: 'desperdicio' }, { label: 'Abrir despensa', route: 'despensa' }]
+        text: tr('bot.soonHead', { body: soonBody }, 'Productos por vencer:\n' + soonBody),
+        actions: [
+          act('act.recipes', 'Ver recetas', { route: 'desperdicio' }),
+          act('act.openPantry', 'Abrir despensa', { route: 'despensa' })
+        ]
       };
     }
 
     if (q.indexOf('stock') !== -1 || q.indexOf('queda poco') !== -1 || q.indexOf('se acabo') !== -1 || q.indexOf('agot') !== -1) {
       var lowLines = low.length
         ? linesOf(low, function (item) {
-          return '· ' + item.name + ' — tienes ' + formatQty(item.qty) + ' ' + (item.unitLabel || item.unit) + ', mínimo ' + formatQty(item.min);
+          var qty = formatQty(item.qty) + ' ' + (item.unitLabel || item.unit);
+          var min = formatQty(item.min);
+          return tr('bot.lowLine', { name: item.name, qty: qty, min: min },
+            '· ' + item.name + ' — tienes ' + qty + ', mínimo ' + min);
         })
-        : '· No hay productos en stock bajo.';
+        : tr('bot.lowNone', null, '· No hay productos en stock bajo.');
       return {
-        text: 'Stock bajo:\n' + lowLines + '\n\nPuedo pasarlos a la lista de compras.',
-        actions: [{ label: 'Ver lista', route: 'lista' }]
+        text: tr('bot.lowHead', { body: lowLines }, 'Stock bajo:\n' + lowLines + '\n\nPuedo pasarlos a la lista de compras.'),
+        actions: [act('act.seeList', 'Ver lista', { route: 'lista' })]
       };
     }
 
@@ -581,13 +644,18 @@
       var limit = Number(ctx.budgetLimit) || 0;
       var left = round2(limit - spent);
       var cats = spendByCategory(ctx.purchases || [], month);
-      var top = cats[0] ? ' Donde más se fue la plata: ' + cats[0].category + ' (' + money(cats[0].total) + ').' : '';
+      var top = cats[0]
+        ? tr('bot.budgetTop', { cat: knownText(cats[0].category), money: money(cats[0].total) },
+          ' Donde más se fue la plata: ' + cats[0].category + ' (' + money(cats[0].total) + ').')
+        : '';
       var pace = left < 0
-        ? 'Ya pasaste el límite por ' + money(Math.abs(left)) + '.'
-        : 'Te quedan ' + money(left) + ' de ' + money(limit) + ' en ' + monthLabel(today) + '.';
+        ? tr('bot.budgetOver', { money: money(Math.abs(left)) }, 'Ya pasaste el límite por ' + money(Math.abs(left)) + '.')
+        : tr('bot.budgetLeft', { left: money(left), limit: money(limit), month: monthLabel(today) },
+          'Te quedan ' + money(left) + ' de ' + money(limit) + ' en ' + monthLabel(today) + '.');
       return {
-        text: 'Este mes llevas ' + money(spent) + '. ' + pace + top,
-        actions: [{ label: 'Abrir presupuesto', route: 'presupuesto' }]
+        text: tr('bot.budget', { spent: money(spent), pace: pace, top: top },
+          'Este mes llevas ' + money(spent) + '. ' + pace + top),
+        actions: [act('act.openBudget', 'Abrir presupuesto', { route: 'presupuesto' })]
       };
     }
 
@@ -595,18 +663,22 @@
       var totals = wasteTotals(ctx.waste || [], monthKey(today));
       var ideas = matchRecipes(pantry, recipes, today).slice(0, 3);
       var ideaText = ideas.length
-        ? linesOf(ideas, function (row) { return '· ' + row.recipe.name + ' (usa ' + row.soon.length + ' por vencer)'; })
-        : '· Hoy no hay recetas con productos por vencer.';
+        ? linesOf(ideas, function (row) {
+          return tr('bot.wasteLine', { name: knownText(row.recipe.name), n: row.soon.length },
+            '· ' + row.recipe.name + ' (usa ' + row.soon.length + ' por vencer)');
+        })
+        : tr('bot.wasteNone', null, '· Hoy no hay recetas con productos por vencer.');
       return {
-        text: 'Llevas ' + money(totals.allBs) + ' estimados en comida salvada y ' + formatQty(totals.allKg) + ' kg que no se botaron.\n\nRecetas para lo que urge:\n' + ideaText + '\n\nSi un producto ya venció, no lo cocines: sácalo de la despensa.',
-        actions: [{ label: 'Anti-desperdicio', route: 'desperdicio' }]
+        text: tr('bot.waste', { money: money(totals.allBs), kg: formatQty(totals.allKg), ideas: ideaText },
+          'Llevas ' + money(totals.allBs) + ' estimados en comida salvada y ' + formatQty(totals.allKg) + ' kg que no se botaron.\n\nRecetas para lo que urge:\n' + ideaText + '\n\nSi un producto ya venció, no lo cocines: sácalo de la despensa.'),
+        actions: [act('act.waste', 'Anti-desperdicio', { route: 'desperdicio' })]
       };
     }
 
     if (q.indexOf('tip') !== -1 || q.indexOf('consejo') !== -1 || q.indexOf('ahorr') !== -1) {
       return {
-        text: 'Tres hábitos que ayudan en casa:\n· Compara feria y supermercado: la verdura suele salir mejor en Mercado Los Pozos o Mercado Mutualista, y la carne a veces en Abasto.\n· El domingo mira qué vence esta semana y arma el menú con eso.\n· No repongas un producto por vencer si todavía tienes bastante: primero cocínalo.\n· Anota la compra apenas llegas, así el presupuesto no se escapa.',
-        actions: [{ label: 'Comparar precios', route: 'precios' }]
+        text: tr('bot.tip', null, 'Tres hábitos que ayudan en casa:\n· Compara feria y supermercado: la verdura suele salir mejor en Mercado Los Pozos o Mercado Mutualista, y la carne a veces en Abasto.\n· El domingo mira qué vence esta semana y arma el menú con eso.\n· No repongas un producto por vencer si todavía tienes bastante: primero cocínalo.\n· Anota la compra apenas llegas, así el presupuesto no se escapa.'),
+        actions: [act('act.prices', 'Comparar precios', { route: 'precios' })]
       };
     }
 
@@ -624,19 +696,25 @@
 
     if (products.length && (asksPrice || q.indexOf('cuanto') !== -1)) {
       var body = products.slice(0, 3).map(priceAnswer).join('\n\n');
-      body += '\n\nPrecios de muestra para el caso de estudio, no son una cotización en vivo.';
-      return { text: body, actions: [{ label: 'Abrir comparador', route: 'precios' }] };
+      body += tr('bot.sample', null, '\n\nPrecios de muestra para el caso de estudio, no son una cotización en vivo.');
+      return { text: body, actions: [act('act.openCompare', 'Abrir comparador', { route: 'precios' })] };
     }
 
     if (asksPrice && (q.indexOf('barat') !== -1 || q.indexOf('conviene') !== -1 || q.indexOf('donde') !== -1 || q.indexOf('precio') !== -1)) {
       var summary = winnerSummary(catalog);
       var basket = basketSavings(catalog);
       var lead = summary.ranked[0]
-        ? summary.ranked[0].store + ' tiene el menor precio en ' + summary.ranked[0].count + ' de ' + catalog.length + ' productos de la muestra.'
-        : 'Todavía no hay precios cargados.';
+        ? tr('bot.basketLead', { store: summary.ranked[0].store, count: summary.ranked[0].count, total: catalog.length },
+          summary.ranked[0].store + ' tiene el menor precio en ' + summary.ranked[0].count + ' de ' + catalog.length + ' productos de la muestra.')
+        : tr('bot.basketNone', null, 'Todavía no hay precios cargados.');
       return {
-        text: lead + ' Si compras una unidad de cada producto en su local más barato, la canasta sale ' + money(basket.cheap) + ' frente a ' + money(basket.pricey) + ' comprando siempre en el más caro. Diferencia: ' + money(basket.save) + '.\n\nEn Santa Cruz la feria de Los Pozos y Mutualista suele ganar en papa, tomate y fruta; Abasto a veces conviene en carne, y el súper gana con aceite, fideos o atún en oferta.',
-        actions: [{ label: 'Ver comparador', route: 'precios' }]
+        text: tr('bot.basket', {
+          lead: lead,
+          cheap: money(basket.cheap),
+          pricey: money(basket.pricey),
+          save: money(basket.save)
+        }, lead + ' Si compras una unidad de cada producto en su local más barato, la canasta sale ' + money(basket.cheap) + ' frente a ' + money(basket.pricey) + ' comprando siempre en el más caro. Diferencia: ' + money(basket.save) + '.\n\nEn Santa Cruz la feria de Los Pozos y Mutualista suele ganar en papa, tomate y fruta; Abasto a veces conviene en carne, y el súper gana con aceite, fideos o atún en oferta.'),
+        actions: [act('act.prices', 'Ver comparador', { route: 'precios' })]
       };
     }
 
@@ -644,24 +722,28 @@
       var pending = (ctx.shopping || []).filter(function (item) { return !item.checked; });
       var ideasBuy = suggestions(pantry, ctx.shopping || [], catalog, today);
       var names = pending.slice(0, 6).map(function (item) { return '· ' + item.name + ' (' + (item.by || 'familia') + ')'; }).join('\n');
+      var tail = pending.length
+        ? tr('bot.listTail', { names: names }, ':\n' + names)
+        : tr('bot.listDot', null, '.');
       return {
-        text: 'En la lista hay ' + pending.length + ' productos por comprar' + (pending.length ? ':\n' + names : '.') + '\n\nYapa sugiere reponer ' + ideasBuy.length + ' ítems que están bajos o por vencer. Cada pedido lleva el nombre de quien lo anotó. Con el mismo código, la lista se sincroniza entre celulares cuando hay internet.',
-        actions: [{ label: 'Abrir lista', route: 'lista' }]
+        text: tr('bot.list', { n: pending.length, tail: tail, ideas: ideasBuy.length },
+          'En la lista hay ' + pending.length + ' productos por comprar' + (pending.length ? ':\n' + names : '.') + '\n\nYapa sugiere reponer ' + ideasBuy.length + ' ítems que están bajos o por vencer. Cada pedido lleva el nombre de quien lo anotó. Con el mismo código, la lista se sincroniza entre celulares cuando hay internet.'),
+        actions: [act('act.openList', 'Abrir lista', { route: 'lista' })]
       };
     }
 
     if (q.indexOf('borrar') !== -1 || q.indexOf('reinici') !== -1 || q.indexOf('restablec') !== -1) {
       return {
-        text: 'Puedes volver a los datos de la familia Rojas desde Acerca del proyecto, con el botón Restablecer datos de ejemplo. Eso borra lo que hayas cambiado en este navegador.',
-        actions: [{ label: 'Ir a Acerca', route: 'acerca' }]
+        text: tr('bot.reset', null, 'Puedes volver a los datos de la familia Rojas desde Acerca del proyecto, con el botón Restablecer datos de ejemplo. Eso borra lo que hayas cambiado en este navegador.'),
+        actions: [act('act.goAbout', 'Ir a Acerca', { route: 'acerca' })]
       };
     }
 
     return {
-      text: 'No tengo una respuesta armada para eso. Prueba con despensa, lista, precios, presupuesto, desperdicio o un producto como leche, pollo o arroz. También puedo darte un tip para ahorrar.',
+      text: tr('bot.fallback', null, 'No tengo una respuesta armada para eso. Prueba con despensa, lista, precios, presupuesto, desperdicio o un producto como leche, pollo o arroz. También puedo darte un tip para ahorrar.'),
       actions: [
-        { label: 'Qué vence pronto', send: '¿Qué está por vencer?' },
-        { label: 'Tip de ahorro', send: 'Dame un tip para ahorrar' }
+        act('act.soon', 'Qué vence pronto', { send: '¿Qué está por vencer?' }),
+        act('act.tip', 'Tip de ahorro', { send: 'Dame un tip para ahorrar' })
       ]
     };
   }

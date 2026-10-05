@@ -91,9 +91,9 @@ La primera vez, GitHub puede pedir permiso para crear el entorno `github-pages`.
 
 ## Idiomas
 
-La interfaz está en castellano (el idioma de entrada), aymara, quechua sureño boliviano y guaraní boliviano. El selector está en el ingreso y en Acerca, y la elección queda en `localStorage` de este navegador (`yapa-lang`). No forma parte de los datos de la familia ni se sincroniza con Firebase.
+La interfaz está en castellano (el idioma de entrada), aymara, quechua sureño boliviano y guaraní boliviano. El selector está en el ingreso, en Más y en Acerca, y la elección queda en `localStorage` de este navegador (`yapa-lang`). No forma parte de los datos de la familia ni se sincroniza con Firebase.
 
-El aymara, el quechua y el guaraní son una primera versión y conviene que los revise una persona hablante. Donde no había una palabra segura se dejó el castellano, porque en Bolivia es habitual mezclarlos. El nombre Yapa no se traduce.
+El aymara, el quechua y el guaraní cubren la interfaz (ingresos, secciones, botones, avisos, fechas y listas). Es una primera versión y conviene que la revise una persona hablante. Donde no había una palabra segura se usó un préstamo habitual. El nombre Yapa no se traduce. El idioma elegido no se sincroniza con Firebase.
 
 ## Nota
 
