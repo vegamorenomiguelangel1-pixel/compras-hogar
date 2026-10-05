@@ -189,17 +189,19 @@ test('la tienda persiste lista, compra, cocinado y presupuesto', function () {
   const bad = Store.addPantry({ name: 'A', qty: 1, min: 1, price: 1, unit: 'u', category: 'Despensa' });
   assert.equal(bad.ok, false);
 
+  const day = L.todayISO();
+  const month = day.slice(0, 7);
   const before = Store.get().shopping.length;
-  const all = Store.addAllSuggestions(TODAY);
+  const all = Store.addAllSuggestions(day);
   assert.ok(all.count >= 5);
   assert.ok(Store.get().shopping.length > before);
-  const again = Store.addAllSuggestions(TODAY);
+  const again = Store.addAllSuggestions(day);
   assert.equal(again.count, 0);
 
   Store.toggleItem('s-sal');
   assert.equal(Store.get().shopping.filter(function (row) { return row.id === 's-sal'; })[0].checked, false);
   Store.toggleItem('s-detergente');
-  const paid = Store.checkout('Hipermaxi', TODAY);
+  const paid = Store.checkout('Hipermaxi', day);
   assert.equal(paid.ok, true);
   assert.ok(paid.total > 0);
   assert.equal(Store.get().shopping.some(function (row) { return row.id === 's-detergente'; }), false);
@@ -207,20 +209,20 @@ test('la tienda persiste lista, compra, cocinado y presupuesto', function () {
   assert.ok(detergent);
   assert.equal(detergent.expiry, null);
 
-  const spentBefore = L.monthSpent(Store.get().purchases, '2026-10');
-  assert.equal(Store.addExpense({ store: 'Fidalga', category: 'Bebidas', amount: '10,50', date: TODAY, note: 'Agua' }).ok, true);
-  assert.equal(L.monthSpent(Store.get().purchases, '2026-10'), L.round2(spentBefore + 10.5));
+  const spentBefore = L.monthSpent(Store.get().purchases, month);
+  assert.equal(Store.addExpense({ store: 'Fidalga', category: 'Bebidas', amount: '10,50', date: day, note: 'Agua' }).ok, true);
+  assert.equal(L.monthSpent(Store.get().purchases, month), L.round2(spentBefore + 10.5));
   assert.equal(Store.setBudget(0).ok, false);
   assert.equal(Store.setBudget(1500).ok, true);
   assert.equal(Store.get().budgetLimit, 1500);
 
-  const cooked = Store.cook('budin', TODAY);
+  const cooked = Store.cook('budin', day);
   assert.equal(cooked.ok, true);
   const leche = Store.get().pantry.filter(function (row) { return row.id === 'p-leche'; })[0];
   assert.equal(leche.qty, 0);
   assert.equal(leche.expiry, null);
-  assert.ok(L.wasteTotals(Store.get().waste, '2026-10').allBs > 6.8);
-  assert.equal(Store.cook('solo-queso', TODAY).ok, false);
+  assert.ok(L.wasteTotals(Store.get().waste, month).allBs > 6.8);
+  assert.equal(Store.cook('solo-queso', day).ok, false);
   assert.equal(Store.discard('p-queso').ok, true);
   assert.equal(Store.get().pantry.some(function (row) { return row.id === 'p-queso'; }), false);
 

@@ -7,6 +7,19 @@
   var I = window.YapaI18n;
 
   function t(key, vars) { return I.t(key, vars); }
+  function te(msg) {
+    if (!msg) return t('toast.saveFail');
+    var value = I.t(msg);
+    return value === msg ? String(msg) : value;
+  }
+  function cat(name) { return I.cat(name); }
+  function unitLabel(label) { return I.unitLabel(label); }
+  function reasonText(text) { return I.reason(text); }
+  function known(text) { return I.known(text); }
+  function personLabel(name) {
+    if (name === 'Yo') return t('word.me');
+    return name || '';
+  }
 
   function langSwitch() {
     var current = I.lang();
@@ -68,7 +81,7 @@
   }
 
   function logoMark() {
-    return '<img class="mark" src="icons/yapa-logo.png" alt="" width="694" height="1024">';
+    return '<img class="mark" src="icons/yapa-logo.png" alt="" width="704" height="842">';
   }
 
   function route() {
@@ -109,7 +122,7 @@
   }
 
   function qtyLabel(row) {
-    return L.formatQty(row.qty) + ' ' + (row.unitLabel || row.unit);
+    return L.formatQty(row.qty) + ' ' + unitLabel(row.unitLabel || row.unit);
   }
 
   function pills(item, day) {
@@ -149,7 +162,19 @@
   }
 
   function field(label, control, hint) {
-    return '<label class="field"><span>' + label + '</span>' + control + (hint ? '<small>' + hint + '</small>' : '') + '</label>';
+    return '<label class="field"><span>' + esc(label) + '</span>' + control + (hint ? '<small>' + esc(hint) + '</small>' : '') + '</label>';
+  }
+
+  function catOptions(selected) {
+    return D.CATEGORIES.map(function (name) {
+      return '<option value="' + esc(name) + '"' + (name === selected ? ' selected' : '') + '>' + esc(cat(name)) + '</option>';
+    }).join('');
+  }
+
+  function unitOptions(selected) {
+    return D.UNITS.map(function (row) {
+      return '<option value="' + esc(row.id) + '"' + (row.id === selected ? ' selected' : '') + '>' + esc(unitLabel(row.label)) + '</option>';
+    }).join('');
   }
 
   function empty(title, text) {
@@ -161,7 +186,7 @@
     var st = L.statusOf(item, day);
     return '<article class="card ' + tone(item, day) + '">'
       + '<div class="item-line tappable" data-action="edit-pantry" data-id="' + esc(item.id) + '" role="button" tabindex="0">'
-      + '<span class="grow"><h3>' + esc(item.name) + '</h3><span class="meta">' + esc(item.category) + ' · mínimo ' + esc(qtyLabel({ qty: item.min, unitLabel: item.unitLabel, unit: item.unit })) + '</span>'
+      + '<span class="grow"><h3>' + esc(item.name) + '</h3><span class="meta">' + esc(cat(item.category)) + ' · ' + esc(t('pantry.minWord')) + ' ' + esc(qtyLabel({ qty: item.min, unitLabel: item.unitLabel, unit: item.unit })) + '</span>'
       + '<span class="meta">' + esc(L.expiryLabel(st.days)) + '</span>' + pills(item, day) + '</span>'
       + '<strong class="money">' + esc(L.money(item.price)) + '</strong></div>'
       + '<div class="stepper"><button type="button" data-action="qty" data-id="' + esc(item.id) + '" data-delta="' + (-step) + '" aria-label="' + esc(t('aria.minus')) + '">−</button><strong>' + esc(qtyLabel(item)) + '</strong><button type="button" data-action="qty" data-id="' + esc(item.id) + '" data-delta="' + step + '" aria-label="' + esc(t('aria.plus')) + '">+</button></div>'
@@ -173,7 +198,7 @@
     if (!box) return;
     var m = model();
     var rows = L.filterPantry(m.state.pantry, { query: ui.qPantry, filter: ui.pantryFilter, today: m.today });
-    box.innerHTML = rows.length ? rows.map(function (item) { return pantryCard(item, m.today); }).join('') : empty('Sin resultados', 'Prueba otro filtro o agrega el producto con el botón naranja.');
+    box.innerHTML = rows.length ? rows.map(function (item) { return pantryCard(item, m.today); }).join('') : empty(t('pantry.emptyTitle'), t('pantry.emptyText'));
   }
 
   function priceCard(product, shopping) {
@@ -191,7 +216,7 @@
     var save = span.save > 0 && high
       ? t('price.save', { money: L.money(span.save), store: high.store })
       : t('price.same');
-    return '<article class="card"><h3>' + esc(product.name) + '</h3><p class="meta">' + esc(product.category) + ' · ' + esc(product.unitLabel) + '</p>'
+    return '<article class="card"><h3>' + esc(product.name) + '</h3><p class="meta">' + esc(cat(product.category)) + ' · ' + esc(unitLabel(product.unitLabel)) + '</p>'
       + rows + '<p class="note">' + esc(save) + '</p>'
       + '<button class="btn" type="button" data-action="add-catalog" data-id="' + esc(product.id) + '">' + (onList ? t('btn.addAnother') : t('btn.addList')) + ' · ' + esc(L.money(best[0].price)) + '</button></article>';
   }
@@ -203,22 +228,22 @@
       .slice()
       .sort(function (a, b) { return a.name.localeCompare(b.name, 'es'); });
     var shopping = Store.get().shopping;
-    box.innerHTML = rows.length ? rows.map(function (product) { return priceCard(product, shopping); }).join('') : empty('No hay coincidencias', 'Busca arroz, pollo, leche o el nombre de un local.');
+    box.innerHTML = rows.length ? rows.map(function (product) { return priceCard(product, shopping); }).join('') : empty(t('price.emptyTitle'), t('price.emptyText'));
   }
 
   function viewInicio(m) {
     var limit = m.state.budgetLimit;
     var pct = limit ? m.spent / limit : 0;
     var left = L.round2(limit - m.spent);
-    var pace = left < 0 ? 'Superaste el presupuesto por ' + L.money(Math.abs(left)) + '.' : 'Te quedan ' + L.money(Math.max(left, 0)) + ' este mes.';
+    var pace = left < 0 ? t('home.paceOver', { money: L.money(Math.abs(left)) }) : t('home.paceLeft', { money: L.money(Math.max(left, 0)) });
     var klass = pct > 1 ? 'is-over' : pct > 0.8 ? 'is-tight' : '';
     var session = Store.session();
-    var name = (session && session.name) || 'familia';
+    var name = (session && session.name) || t('family.fallback');
     var code = (session && session.code) || '';
     var banner = m.expired.length
       ? '<a class="banner" href="#/despensa">' + (m.expired.length === 1
-        ? '1 producto venció. No lo consumas: revísalo en la despensa.'
-        : m.expired.length + ' productos vencieron. No los consumas: revísalos en la despensa.') + '</a>'
+        ? t('home.expiredOne')
+        : t('home.expiredMany', { n: m.expired.length })) + '</a>'
       : '';
     var soonCards = m.soon.slice(0, 8).map(function (item) {
       var st = L.statusOf(item, m.today);
@@ -226,7 +251,7 @@
     }).join('');
     var pending = m.state.shopping.filter(function (row) { return !row.checked; }).slice(0, 3);
     var listPreview = pending.map(function (row) {
-      return '<p class="meta">' + who(row.by) + ' ' + esc(row.name) + ' · ' + esc(row.reason) + '</p>';
+      return '<p class="meta">' + who(row.by) + ' ' + esc(row.name) + ' · ' + esc(reasonText(row.reason)) + '</p>';
     }).join('');
     var place = [m.state.family.neighborhood, m.state.family.city].filter(Boolean).join(', ');
     var joined = (m.state.joined || []).map(function (row) { return row.name; });
@@ -242,11 +267,11 @@
       + stat(L.money(m.spent), t('stat.spent'), 'presupuesto')
       + stat(L.money(m.waste.allBs), t('stat.saved'), 'desperdicio')
       + '</div>'
-      + '<a class="card" href="#/presupuesto"><div class="ring-wrap">' + ring(pct, klass) + '<span class="grow"><strong>' + esc(Math.round(pct * 100)) + '%</strong> del presupuesto de ' + esc(L.money(limit)) + '<span class="meta">' + esc(pace) + '</span></span></div><div class="progress ' + klass + '" style="margin-top:12px"><span style="width:' + Math.min(100, Math.round(pct * 100)) + '%"></span></div></a>'
+      + '<a class="card" href="#/presupuesto"><div class="ring-wrap">' + ring(pct, klass) + '<span class="grow"><strong>' + esc(t('home.budgetPct', { pct: Math.round(pct * 100), money: L.money(limit) })) + '</strong><span class="meta">' + esc(pace) + '</span></span></div><div class="progress ' + klass + '" style="margin-top:12px"><span style="width:' + Math.min(100, Math.round(pct * 100)) + '%"></span></div></a>'
       + '</div>'
       + (soonCards ? '<div class="section-title"><h2>' + esc(t('section.soon')) + '</h2><button class="linkish" type="button" data-action="go" data-route="desperdicio">' + esc(t('section.recipes')) + '</button></div><div class="scroller">' + soonCards + '</div>' : '')
       + '<div class="section-title"><h2>' + esc(t('section.familyList')) + '</h2><button class="linkish" type="button" data-action="go" data-route="lista">' + esc(t('section.open')) + '</button></div>'
-      + '<div class="card"><p class="meta">Yapa sugiere reponer ' + m.suggestions.length + ' productos.</p>' + (listPreview || '<p class="meta">No hay pedidos pendientes.</p>') + '<p class="note">Por comprar: ' + esc(L.money(L.listTotal(m.state.shopping, false))) + '. Cada pedido muestra quién lo anotó. Quien entre con ' + esc(code) + ' en otro celular ve la misma lista.</p></div>';
+      + '<div class="card"><p class="meta">' + esc(t('home.suggest', { n: m.suggestions.length })) + '</p>' + (listPreview || '<p class="meta">' + esc(t('home.noPending')) + '</p>') + '<p class="note">' + esc(t('home.buyNote', { open: L.money(L.listTotal(m.state.shopping, false)), code: code })) + '</p></div>';
   }
 
   function stat(value, label, dest) {
@@ -271,7 +296,7 @@
       var on = ui.pantryFilter === row[0] ? ' on' : '';
       return '<button type="button" class="' + on + '" data-action="pantry-filter" data-filter="' + row[0] + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + row[1] + ' ' + counts[row[0]] + '</button>';
     }).join('');
-    return '<div class="stack"><input id="q-pantry" class="search" type="search" placeholder="' + esc(t('search.pantry')) + '" value="' + esc(ui.qPantry) + '" autocomplete="off" aria-label="' + esc(t('search.pantry')) + '"><div class="filters" role="toolbar">' + filters + '</div><div id="pantry-list" class="stack"></div><p class="note">El color marca el estado: rojo si está vencido, amarillo si vence pronto (en ' + L.SOON_DAYS + ' días) y verde si está bien. El aviso de stock bajo aparece cuando la cantidad llega al mínimo.</p></div>'
+    return '<div class="stack"><input id="q-pantry" class="search" type="search" placeholder="' + esc(t('search.pantry')) + '" value="' + esc(ui.qPantry) + '" autocomplete="off" aria-label="' + esc(t('search.pantry')) + '"><div class="filters" role="toolbar">' + filters + '</div><div id="pantry-list" class="stack"></div><p class="note">' + esc(t('pantry.note', { days: L.SOON_DAYS })) + '</p></div>'
       + '<button class="fab" type="button" data-action="open-add-pantry" aria-label="' + esc(t('aria.addProduct')) + '">' + icon('plus') + '</button>';
   }
 
@@ -283,26 +308,26 @@
     }).join('');
     var whoJoined = joined.length ? joined.join(', ') : t('joined.nobody');
     var ideas = m.suggestions.map(function (row) {
-      return '<article class="card"><div class="item-line">' + who('Yapa') + '<span class="grow"><h3>' + esc(row.name) + '</h3><p class="meta">' + esc(row.reason) + ' · ' + esc(qtyLabel(row)) + '</p></span><strong class="money">' + esc(L.money(row.qty * row.price)) + '</strong></div><button class="btn tiny" type="button" data-action="add-suggestion" data-id="' + esc(row.pantryId) + '">' + esc(t('btn.add')) + '</button></article>';
+      return '<article class="card"><div class="item-line">' + who('Yapa') + '<span class="grow"><h3>' + esc(row.name) + '</h3><p class="meta">' + esc(reasonText(row.reason)) + ' · ' + esc(qtyLabel(row)) + '</p></span><strong class="money">' + esc(L.money(row.qty * row.price)) + '</strong></div><button class="btn tiny" type="button" data-action="add-suggestion" data-id="' + esc(row.pantryId) + '">' + esc(t('btn.add')) + '</button></article>';
     }).join('');
     var open = m.state.shopping.filter(function (row) { return !row.checked; });
     var done = m.state.shopping.filter(function (row) { return row.checked; });
     function rows(list, muted) {
       return list.map(function (row) {
         return '<article class="card ' + (muted ? 'checked-item' : '') + '"><div class="item-line"><button class="check ' + (row.checked ? 'on' : '') + '" type="button" data-action="toggle-item" data-id="' + esc(row.id) + '" aria-pressed="' + (row.checked ? 'true' : 'false') + '" aria-label="' + esc(t('aria.mark', { name: row.name })) + '">' + icon('check') + '</button>'
-          + '<span class="grow"><h3>' + esc(row.name) + '</h3><p class="meta">' + who(row.by) + ' ' + esc(row.by) + ' · ' + esc(row.reason) + '</p><p class="meta">' + esc(qtyLabel(row)) + ' · ' + esc(L.money(row.price)) + ' c/u</p></span>'
+          + '<span class="grow"><h3>' + esc(row.name) + '</h3><p class="meta">' + who(row.by) + ' ' + esc(personLabel(row.by)) + ' · ' + esc(reasonText(row.reason)) + '</p><p class="meta">' + esc(qtyLabel(row)) + ' · ' + esc(L.money(row.price)) + ' ' + esc(t('word.each')) + '</p></span>'
           + '<strong class="money">' + esc(L.money(row.qty * row.price)) + '</strong></div>'
           + '<button class="linkish" type="button" data-action="remove-item" data-id="' + esc(row.id) + '">' + esc(t('btn.remove')) + '</button></article>';
       }).join('');
     }
     var suggestTotal = L.round2(m.suggestions.reduce(function (sum, row) { return sum + row.qty * row.price; }, 0));
-    return '<div class="card"><div class="split"><div class="avatars" aria-hidden="true">' + people + '</div><span class="grow"><strong>' + esc(t('family.name', { surname: m.state.family.surname })) + '</strong><p class="meta">' + esc(t('code.label', { code: session ? session.code : '' })) + ' · ' + esc(t('joined.entered', { names: whoJoined })) + '</p></span></div><p class="note">' + esc(t('section.toBuy')) + ' ' + esc(L.money(L.listTotal(m.state.shopping, false))) + ' · ' + esc(t('section.cart')) + ' ' + esc(L.money(L.listTotal(m.state.shopping, true))) + '. Lo que agregues queda a tu nombre y se ve en los otros celulares con este código.</p></div>'
+    return '<div class="card"><div class="split"><div class="avatars" aria-hidden="true">' + people + '</div><span class="grow"><strong>' + esc(t('family.name', { surname: m.state.family.surname })) + '</strong><p class="meta">' + esc(t('code.label', { code: session ? session.code : '' })) + ' · ' + esc(t('joined.entered', { names: whoJoined })) + '</p></span></div><p class="note">' + esc(t('lista.shareNote', { buy: t('section.toBuy'), open: L.money(L.listTotal(m.state.shopping, false)), cart: t('section.cart'), done: L.money(L.listTotal(m.state.shopping, true)) })) + '</p></div>'
       + '<div class="section-title"><h2>' + esc(t('section.suggestions')) + '</h2>' + (m.suggestions.length ? '<button class="linkish" type="button" data-action="add-all">' + esc(t('btn.addAll')) + '</button>' : '') + '</div>'
-      + '<div class="stack">' + (ideas || '<div class="card"><p class="meta">No hay reposiciones urgentes. La despensa está tranquila o ya pasaste las sugerencias a la lista.</p></div>') + '</div>'
-      + (m.suggestions.length ? '<p class="note">Si agregas todas, suman cerca de ' + esc(L.money(suggestTotal)) + ' al precio más bajo de la muestra.</p>' : '')
-      + '<div class="section-title"><h2>' + esc(t('section.toBuy')) + '</h2></div><div class="stack">' + (rows(open, false) || '<div class="card"><p class="meta">Nada pendiente. Agrega un pedido de la familia o una sugerencia.</p></div>') + '</div>'
+      + '<div class="stack">' + (ideas || '<div class="card"><p class="meta">' + esc(t('lista.noSuggest')) + '</p></div>') + '</div>'
+      + (m.suggestions.length ? '<p class="note">' + esc(t('lista.suggestSum', { money: L.money(suggestTotal) })) + '</p>' : '')
+      + '<div class="section-title"><h2>' + esc(t('section.toBuy')) + '</h2></div><div class="stack">' + (rows(open, false) || '<div class="card"><p class="meta">' + esc(t('lista.emptyOpen')) + '</p></div>') + '</div>'
       + (done.length ? '<div class="section-title"><h2>' + esc(t('section.cart')) + '</h2></div><div class="stack">' + rows(done, true) + '</div>' : '')
-      + '<div class="dock"><div><strong>' + esc(L.money(L.listTotal(m.state.shopping, true))) + '</strong><p>' + done.length + ' listos para registrar</p></div><button class="btn tiny" type="button" data-action="open-checkout"' + (done.length ? '' : ' disabled') + '>' + esc(t('btn.register')) + '</button></div>';
+      + '<div class="dock"><div><strong>' + esc(L.money(L.listTotal(m.state.shopping, true))) + '</strong><p>' + esc(t('lista.ready', { n: done.length })) + '</p></div><button class="btn tiny" type="button" data-action="open-checkout"' + (done.length ? '' : ' disabled') + '>' + esc(t('btn.register')) + '</button></div>';
   }
 
   function viewPrecios() {
@@ -316,12 +341,12 @@
       return D.CATALOG.some(function (product) { return product.category === cat; });
     }));
     var chips = cats.map(function (cat) {
-      return '<button type="button" class="' + (ui.priceCat === cat ? 'on' : '') + '" data-action="price-cat" data-cat="' + esc(cat) + '">' + esc(cat === 'Todas' ? t('filter.all') : cat) + '</button>';
+      return '<button type="button" class="' + (ui.priceCat === cat ? 'on' : '') + '" data-action="price-cat" data-cat="' + esc(cat) + '">' + esc(cat === 'Todas' ? t('filter.all') : I.cat(cat)) + '</button>';
     }).join('');
     var lead = summary.ranked[0]
-      ? summary.ranked[0].store + ' tiene el menor precio en ' + summary.ranked[0].count + ' de ' + D.CATALOG.length + ' productos.'
+      ? t('price.lead', { store: summary.ranked[0].store, count: summary.ranked[0].count, total: D.CATALOG.length })
       : '';
-    return '<div class="card"><h2>' + esc(t('section.basket')) + '</h2><p class="meta">' + esc(lead) + '</p>' + bars + '<p class="note">Una unidad de cada producto sale ' + esc(L.money(basket.cheap)) + ' si eliges siempre el local más barato, y ' + esc(L.money(basket.pricey)) + ' si eliges el más caro. Diferencia: ' + esc(L.money(basket.save)) + '. Precios referenciales, no cotización en vivo.</p></div>'
+    return '<div class="card"><h2>' + esc(t('section.basket')) + '</h2><p class="meta">' + esc(lead) + '</p>' + bars + '<p class="note">' + esc(t('price.basketNote', { cheap: L.money(basket.cheap), pricey: L.money(basket.pricey), save: L.money(basket.save) })) + '</p></div>'
       + '<div class="stack" style="margin-top:12px"><input id="q-price" class="search" type="search" placeholder="' + esc(t('search.product')) + '" value="' + esc(ui.qPrice) + '" autocomplete="off" aria-label="' + esc(t('search.product')) + '"><div class="filters">' + chips + '</div><div id="price-list" class="stack"></div></div>';
   }
 
@@ -334,7 +359,7 @@
     ].map(function (row) {
       return '<a class="menu-row" href="#/' + row[0] + '"><span class="menu-ico">' + esc(row[1].charAt(0)) + '</span><span class="grow">' + esc(row[1]) + '<small>' + esc(row[2]) + '</small></span>' + icon('chev') + '</a>';
     }).join('');
-    var install = '<p class="note">Desde el celular: menú Compartir o los tres puntos, y luego Agregar a la pantalla de inicio. En el escritorio, el ícono de instalar aparece en la barra de direcciones.</p>';
+    var install = '<p class="note">' + esc(t('menu.install')) + '</p>';
     var session = Store.session();
     return '<div class="menu">' + rows + '</div><div class="card" style="margin-top:12px"><h2>' + esc(t('menu.phone')) + '</h2>' + langSwitch() + '<p class="meta">' + esc(session ? session.name : '') + ' · ' + esc(session ? session.code : '') + '</p>' + install + '<button class="btn ghost" type="button" data-action="logout">' + esc(t('logout')) + '</button><button class="btn danger" type="button" data-action="open-reset">' + esc(t('btn.reset')) + '</button></div>';
   }
@@ -345,50 +370,53 @@
     var left = L.round2(limit - m.spent);
     var klass = pct > 1 ? 'is-over' : pct > 0.8 ? 'is-tight' : '';
     var text = left < 0
-      ? 'Pasaste el tope por ' + L.money(Math.abs(left)) + '. Conviene priorizar la lista de reposición, no los antojos.'
-      : 'Todavía tienes ' + L.money(left) + ' de ' + L.money(limit) + ' en ' + L.monthLabel(m.today) + '.';
+      ? t('budget.over', { money: L.money(Math.abs(left)) })
+      : t('budget.left', { left: L.money(left), limit: L.money(limit), month: L.monthLabel(m.today) });
     var max = m.cats.length ? m.cats[0].total : 1;
     var bars = m.cats.map(function (row) {
-      return '<div class="chart-row"><span>' + esc(row.category) + '</span><span class="chart-track"><span style="width:' + Math.max(6, Math.round(row.total / max * 100)) + '%"></span></span><strong class="money">' + esc(L.money(row.total)) + '</strong></div>';
+      return '<div class="chart-row"><span>' + esc(cat(row.category)) + '</span><span class="chart-track"><span style="width:' + Math.max(6, Math.round(row.total / max * 100)) + '%"></span></span><strong class="money">' + esc(L.money(row.total)) + '</strong></div>';
     }).join('');
     var list = m.state.purchases.filter(function (row) { return L.monthKey(row.date) === m.month; }).map(function (row) {
       var detail = row.items.map(function (item) { return item.name; }).slice(0, 3).join(', ');
-      return '<article class="card"><div class="item-line"><span class="grow"><h3>' + esc(row.store) + '</h3><p class="meta">' + esc(L.formatShort(row.date)) + ' · ' + esc(row.note) + '</p><p class="meta">' + esc(detail) + '</p></span><strong class="money">' + esc(L.money(row.total)) + '</strong></div><button class="linkish" type="button" data-action="remove-expense" data-id="' + esc(row.id) + '">' + esc(t('btn.delete')) + '</button></article>';
+      return '<article class="card"><div class="item-line"><span class="grow"><h3>' + esc(row.store) + '</h3><p class="meta">' + esc(L.formatShort(row.date)) + ' · ' + esc(known(row.note)) + '</p><p class="meta">' + esc(detail) + '</p></span><strong class="money">' + esc(L.money(row.total)) + '</strong></div><button class="linkish" type="button" data-action="remove-expense" data-id="' + esc(row.id) + '">' + esc(t('btn.delete')) + '</button></article>';
     }).join('');
-    return '<div class="card"><p class="eyebrow">' + esc(L.monthLabel(m.today)) + '</p><div class="ring-wrap">' + ring(pct, klass) + '<span class="grow"><strong style="font-size:1.6rem">' + esc(L.money(m.spent)) + '</strong><p class="meta">de ' + esc(L.money(limit)) + '</p></span></div><div class="progress ' + klass + '" role="progressbar" aria-valuemin="0" aria-valuemax="' + limit + '" aria-valuenow="' + m.spent + '" aria-label="' + esc(t('aria.month')) + '" style="margin-top:12px"><span style="width:' + Math.min(100, Math.round(pct * 100)) + '%"></span></div><p class="note">' + esc(text) + '</p><button class="btn ghost" type="button" data-action="open-budget">Cambiar presupuesto mensual</button></div>'
+    return '<div class="card"><p class="eyebrow">' + esc(L.monthLabel(m.today)) + '</p><div class="ring-wrap">' + ring(pct, klass) + '<span class="grow"><strong style="font-size:1.6rem">' + esc(L.money(m.spent)) + '</strong><p class="meta">' + esc(t('budget.of', { money: L.money(limit) })) + '</p></span></div><div class="progress ' + klass + '" role="progressbar" aria-valuemin="0" aria-valuemax="' + limit + '" aria-valuenow="' + m.spent + '" aria-label="' + esc(t('aria.month')) + '" style="margin-top:12px"><span style="width:' + Math.min(100, Math.round(pct * 100)) + '%"></span></div><p class="note">' + esc(text) + '</p><button class="btn ghost" type="button" data-action="open-budget">' + esc(t('btn.changeBudget')) + '</button></div>'
       + '<div class="section-title"><h2>' + esc(t('section.byCat')) + '</h2></div>'
-      + (bars ? '<div class="card">' + bars + '</div>' : '<div class="card"><p class="meta">Todavía no hay compras este mes.</p></div>')
-      + '<div class="section-title"><h2>' + esc(t('section.monthBuys')) + '</h2><button class="linkish" type="button" data-action="open-expense">' + esc(t('btn.note')) + '</button></div><div class="stack">' + (list || '<div class="card"><p class="meta">Cuando registres la lista o anotes un gasto, aparece aquí.</p></div>') + '</div>';
+      + (bars ? '<div class="card">' + bars + '</div>' : '<div class="card"><p class="meta">' + esc(t('budget.noCat')) + '</p></div>')
+      + '<div class="section-title"><h2>' + esc(t('section.monthBuys')) + '</h2><button class="linkish" type="button" data-action="open-expense">' + esc(t('btn.note')) + '</button></div><div class="stack">' + (list || '<div class="card"><p class="meta">' + esc(t('budget.emptyBuys')) + '</p></div>') + '</div>';
   }
 
   function viewDesperdicio(m) {
     var w = m.waste;
     var expired = m.expired.map(function (item) {
-      return '<article class="card expired"><h3>' + esc(item.name) + '</h3><p class="meta">' + esc(L.expiryLabel(L.statusOf(item, m.today).days)) + ' · ' + esc(qtyLabel(item)) + '</p><p class="note">No lo cocines ni lo sirvas. Sácalo de la despensa. Esto no suma al ahorro.</p><button class="btn danger" type="button" data-action="open-discard" data-id="' + esc(item.id) + '">Ya lo saqué</button></article>';
+      return '<article class="card expired"><h3>' + esc(item.name) + '</h3><p class="meta">' + esc(L.expiryLabel(L.statusOf(item, m.today).days)) + ' · ' + esc(qtyLabel(item)) + '</p><p class="note">' + esc(t('waste.dontCook')) + '</p><button class="btn danger" type="button" data-action="open-discard" data-id="' + esc(item.id) + '">' + esc(t('btn.pulled')) + '</button></article>';
     }).join('');
     var matches = L.matchRecipes(m.state.pantry, D.RECIPES, m.today);
     var recipes = matches.map(function (row) {
       var impact = L.cookImpact(row.recipe, m.state.pantry, m.today);
       var chips = row.recipe.ingredients.map(function (ing) {
         var hit = row.soon.some(function (item) { return L.hasTerm(item.name, ing.key); });
-        return '<span class="pill ' + (hit ? 'warn' : 'neutral') + '">' + esc(ing.label) + '</span>';
+        return '<span class="pill ' + (hit ? 'warn' : 'neutral') + '">' + esc(known(ing.label)) + '</span>';
       }).join('');
-      var steps = row.recipe.steps.map(function (step) { return '<li>' + esc(step) + '</li>'; }).join('');
-      return '<details class="recipe"><summary><h3>' + esc(row.recipe.name) + '</h3><span class="meta">' + row.recipe.minutes + ' min · aprovecha ' + row.soon.length + (row.soon.length === 1 ? ' producto' : ' productos') + '</span><div class="pills">' + chips + '</div></summary><div class="body"><p>' + esc(row.recipe.note) + '</p><ol>' + steps + '</ol><button class="btn" type="button" data-action="open-cook" data-id="' + esc(row.recipe.id) + '">Cociné esta receta · ' + esc(L.money(impact.bs)) + '</button></div></details>';
+      var steps = row.recipe.steps.map(function (step) { return '<li>' + esc(known(step)) + '</li>'; }).join('');
+      var uses = row.soon.length === 1
+        ? t('waste.usesOne', { min: row.recipe.minutes, n: row.soon.length })
+        : t('waste.usesMany', { min: row.recipe.minutes, n: row.soon.length });
+      return '<details class="recipe"><summary><h3>' + esc(known(row.recipe.name)) + '</h3><span class="meta">' + esc(uses) + '</span><div class="pills">' + chips + '</div></summary><div class="body"><p>' + esc(known(row.recipe.note)) + '</p><ol>' + steps + '</ol><button class="btn" type="button" data-action="open-cook" data-id="' + esc(row.recipe.id) + '">' + esc(t('waste.cook', { money: L.money(impact.bs) })) + '</button></div></details>';
     }).join('');
-    return '<div class="stats"><div class="stat"><strong>' + esc(L.money(w.allBs)) + '</strong><span>salvados en total</span></div><div class="stat"><strong>' + esc(L.formatQty(w.allKg)) + ' kg</strong><span>que no se botaron</span></div></div>'
-      + '<p class="note">Este mes: ' + esc(L.money(w.monthBs)) + ' y ' + esc(L.formatQty(w.monthKg)) + ' kg. La cifra usa el precio anotado en la despensa por la cantidad de la receta, y un peso aproximado. No es una balanza.</p>'
+    return '<div class="stats"><div class="stat"><strong>' + esc(L.money(w.allBs)) + '</strong><span>' + esc(t('waste.savedTotal')) + '</span></div><div class="stat"><strong>' + esc(L.formatQty(w.allKg)) + ' kg</strong><span>' + esc(t('waste.notTossed')) + '</span></div></div>'
+      + '<p class="note">' + esc(t('waste.monthNote', { money: L.money(w.monthBs), kg: L.formatQty(w.monthKg) })) + '</p>'
       + (expired ? '<div class="section-title"><h2>' + esc(t('section.expired')) + '</h2></div><div class="stack">' + expired + '</div>' : '')
-      + '<div class="section-title"><h2>' + esc(t('section.urgent')) + '</h2></div><div class="stack">' + (recipes || '<div class="card"><p class="meta">Nada por vencer en los próximos ' + L.SOON_DAYS + ' días. Buen momento para no comprar de más.</p></div>') + '</div>';
+      + '<div class="section-title"><h2>' + esc(t('section.urgent')) + '</h2></div><div class="stack">' + (recipes || '<div class="card"><p class="meta">' + esc(t('waste.empty', { days: L.SOON_DAYS })) + '</p></div>') + '</div>';
   }
 
   function viewAsistente(m) {
     var messages = m.state.messages.map(function (msg) {
       var actions = (msg.actions || []).map(function (action, index) {
-        if (action.route) return '<button type="button" class="chip" data-action="go" data-route="' + esc(action.route) + '">' + esc(action.label) + '</button>';
-        return '<button type="button" class="chip" data-action="bot-send" data-text="' + esc(action.send || action.label) + '">' + esc(action.label) + '</button>';
+        if (action.route) return '<button type="button" class="chip" data-action="go" data-route="' + esc(action.route) + '">' + esc(known(action.label)) + '</button>';
+        return '<button type="button" class="chip" data-action="bot-send" data-text="' + esc(action.send || action.label) + '">' + esc(known(action.label)) + '</button>';
       }).join('');
-      return '<div class="msg ' + (msg.role === 'user' ? 'user' : 'bot') + '"><div class="bubble"><p>' + esc(msg.text) + '</p>' + (actions ? '<div class="chips">' + actions + '</div>' : '') + '</div></div>';
+      return '<div class="msg ' + (msg.role === 'user' ? 'user' : 'bot') + '"><div class="bubble"><p>' + esc(known(msg.text)) + '</p>' + (actions ? '<div class="chips">' + actions + '</div>' : '') + '</div></div>';
     }).join('');
     var typing = ui.typing ? '<div class="msg bot"><div class="bubble typing" aria-label="' + esc(t('chat.typing')) + '"><i></i><i></i><i></i></div></div>' : '';
     var quick = QUICK.map(function (key, index) {
@@ -400,13 +428,13 @@
 
   function viewAcerca(m) {
     var members = m.state.group.map(function (member, index) {
-      return field('Integrante ' + (index + 1), '<input class="member-name" data-index="' + index + '" name="m' + index + '" value="' + esc(member.name) + '" placeholder="Nombre y apellido" maxlength="60" autocomplete="name">');
+      return field(t('about.member', { n: index + 1 }), '<input class="member-name" data-index="' + index + '" name="m' + index + '" value="' + esc(member.name) + '" placeholder="' + esc(t('about.memberPh')) + '" maxlength="60" autocomplete="name">');
     }).join('');
     var home = m.state.family;
     var where = home.address || [home.neighborhood, home.city].filter(Boolean).join(', ');
-    return '<div class="about stack"><div class="card"><div class="hero-brand">' + logoMark() + '<strong>Yapa</strong></div>' + langSwitch() + '<p class="note">' + esc(t('i18n.note')) + '</p><p>Prototipo para el caso de estudio <strong>App de Gestión Inteligente de Compras para Hogares</strong>. La familia Rojas vive en ' + esc(where) + '. Es un ejemplo ficticio. El código de muestra es <strong>ROJAS-2026</strong>.</p><p>Compara precios en <strong>Hipermaxi</strong>, <strong>Fidalga</strong>, <strong>IC Norte</strong>, <strong>Mercado Los Pozos</strong>, <strong>Mercado Mutualista</strong> y <strong>Abasto</strong>.</p><p>El referente de clase es Minimkt, un minimarket chileno con control de stock, alertas, analítica, pedidos recurrentes y asistente. Yapa pasa esas ideas a la cocina de una casa cruceña. No es una app comercial: no hay servidor, no hay cuentas y los precios no se consultan en vivo.</p><p>El mismo código sincroniza la despensa, la lista, el presupuesto y los integrantes entre celulares con Firebase. Si no hay internet, Yapa sigue con la copia de este navegador y marca Sin conexión. Al volver la red, los cambios se envían solos.</p></div>'
-      + '<ul class="map"><li><strong>Stock de Minimkt</strong><span>Despensa con cantidad, mínimo y vencimiento.</span></li><li><strong>Alertas de quiebre</strong><span>Avisos de stock bajo, por vencer y vencido.</span></li><li><strong>Analítica</strong><span>Presupuesto del mes y gasto por categoría.</span></li><li><strong>Pedidos recurrentes</strong><span>Sugerencias y lista con pedidos de la familia.</span></li><li><strong>Asistente</strong><span>Respuestas por reglas, con los datos de tu despensa, sin clave de API.</span></li></ul>'
-      + '<div class="card"><h2>Integrantes del grupo</h2><p class="meta">Completa los nombres. Se guardan con la familia, en este navegador y en la nube.</p>' + members + '<p class="note">Tecnología: HTML, CSS y JavaScript, con Firebase (Auth anónima y Firestore) para sincronizar. localStorage queda como copia sin conexión. Se puede instalar como PWA. Pensada para publicarse en GitHub Pages con rutas relativas.</p></div></div>';
+    return '<div class="about stack"><div class="card"><div class="hero-brand">' + logoMark() + '<strong>Yapa</strong></div>' + langSwitch() + '<p class="note">' + esc(t('i18n.note')) + '</p><p>' + t('about.p1', { where: esc(where) }) + '</p><p>' + t('about.p2') + '</p><p>' + t('about.p3') + '</p><p>' + t('about.p4') + '</p></div>'
+      + '<ul class="map"><li><strong>' + esc(t('about.map1t')) + '</strong><span>' + esc(t('about.map1s')) + '</span></li><li><strong>' + esc(t('about.map2t')) + '</strong><span>' + esc(t('about.map2s')) + '</span></li><li><strong>' + esc(t('about.map3t')) + '</strong><span>' + esc(t('about.map3s')) + '</span></li><li><strong>' + esc(t('about.map4t')) + '</strong><span>' + esc(t('about.map4s')) + '</span></li><li><strong>' + esc(t('about.map5t')) + '</strong><span>' + esc(t('about.map5s')) + '</span></li></ul>'
+      + '<div class="card"><h2>' + esc(t('about.group')) + '</h2><p class="meta">' + esc(t('about.groupHint')) + '</p>' + members + '<p class="note">' + esc(t('about.tech')) + '</p></div></div>';
   }
 
   function renderTopbar(name, m) {
@@ -521,7 +549,7 @@
         + '<button class="btn ghost" type="button" data-action="auth-mode" data-mode="create">' + esc(t('login.create')) + '</button>';
     var heading = creating ? t('login.create') : t('login.in');
     var lead = creating ? t('login.leadCreate') : t('login.leadIn');
-    view.innerHTML = '<section class="gate"><img class="gate-logo" src="icons/yapa-logo.png" alt="Yapa" width="694" height="1024"><p class="gate-word" aria-hidden="true">Yapa</p>' + langSwitch() + syncPill() + '<h1>' + esc(heading) + '</h1><p class="lead">' + esc(lead) + '</p>' + form + '</section>';
+    view.innerHTML = '<section class="gate"><img class="gate-logo" src="icons/yapa-logo.png" alt="Yapa" width="704" height="842"><p class="gate-word" aria-hidden="true">Yapa</p>' + langSwitch() + syncPill() + '<h1>' + esc(heading) + '</h1><p class="lead">' + esc(lead) + '</p>' + form + '</section>';
     paintChrome();
     document.getElementById('offline').hidden = navigator.onLine;
     var theme = document.querySelector('meta[name="theme-color"]');
@@ -602,11 +630,11 @@
 
   function finish(result, message) {
     if (!result || !result.ok) {
-      showFormError((result && result.error) || 'No se pudo guardar.');
+      showFormError(te((result && result.error) || 'toast.saveFail'));
       return false;
     }
     closeSheet();
-    toast(result.saved === false ? 'Se ve en pantalla, pero este navegador no dejó guardarlo.' : message);
+    toast(result.saved === false ? t('toast.localOnly') : message);
     render();
     return true;
   }
@@ -619,25 +647,31 @@
 
   function pantryForm(item) {
     var row = item || { name: '', category: 'Verduras', qty: 1, unit: 'kg', unitLabel: 'kg', min: 1, expiry: L.addDays(today(), 7), price: '' };
-    return field('Producto', '<input name="name" required maxlength="80" value="' + esc(row.name) + '" placeholder="Ej. Papa">')
-      + field('Categoría', '<select name="category">' + options(D.CATEGORIES, row.category) + '</select>')
-      + '<div class="grid-2">' + field('Cantidad', '<input name="qty" required inputmode="decimal" step="any" min="0" value="' + esc(row.qty) + '">')
-      + field('Unidad', '<select name="unit">' + options(D.UNITS, row.unit, 'id', 'label') + '</select>') + '</div>'
-      + field('Cómo se cuenta', '<input name="unitLabel" maxlength="24" value="' + esc(row.unitLabel || '') + '" placeholder="kg, botella, lata">', 'Sirve para leer la cantidad: 1 botella, 0,5 kg.')
-      + '<div class="grid-2">' + field('Stock mínimo', '<input name="min" required inputmode="decimal" step="any" min="0" value="' + esc(row.min) + '">')
-      + field('Precio por unidad (Bs)', '<input name="price" required inputmode="decimal" step="any" min="0" value="' + esc(row.price) + '">') + '</div>'
-      + field('Vencimiento', '<input name="expiry" type="date" value="' + esc(row.expiry || '') + '">', 'Vacío si no vence, como la limpieza.')
-      + '<button class="btn" type="submit">' + (item ? 'Guardar cambios' : 'Agregar a la despensa') + '</button>'
-      + (item ? '<button class="btn danger" type="button" data-action="delete-pantry" data-id="' + esc(item.id) + '">Eliminar de la despensa</button>' : '');
+    return field(t('form.product'), '<input name="name" required maxlength="80" value="' + esc(row.name) + '" placeholder="' + esc(t('form.productPh')) + '">')
+      + field(t('form.category'), '<select name="category">' + catOptions(row.category) + '</select>')
+      + '<div class="grid-2">' + field(t('form.qty'), '<input name="qty" required inputmode="decimal" step="any" min="0" value="' + esc(row.qty) + '">')
+      + field(t('form.unit'), '<select name="unit">' + unitOptions(row.unit) + '</select>') + '</div>'
+      + field(t('form.count'), '<input name="unitLabel" maxlength="24" value="' + esc(row.unitLabel || '') + '" placeholder="' + esc(t('form.countPh')) + '">', t('form.countHint'))
+      + '<div class="grid-2">' + field(t('form.min'), '<input name="min" required inputmode="decimal" step="any" min="0" value="' + esc(row.min) + '">')
+      + field(t('form.price'), '<input name="price" required inputmode="decimal" step="any" min="0" value="' + esc(row.price) + '">') + '</div>'
+      + field(t('form.expiry'), '<input name="expiry" type="date" value="' + esc(row.expiry || '') + '">', t('form.expiryHint'))
+      + '<button class="btn" type="submit">' + esc(item ? t('btn.save') : t('btn.addPantry')) + '</button>'
+      + (item ? '<button class="btn danger" type="button" data-action="delete-pantry" data-id="' + esc(item.id) + '">' + esc(t('form.deletePantry')) + '</button>' : '');
   }
 
   function openPantry(id) {
     var item = id ? Store.get().pantry.filter(function (row) { return row.id === id; })[0] : null;
-    openSheet(item ? 'Editar producto' : 'Nuevo producto', pantryForm(item), item ? 'save-pantry' : 'save-pantry');
+    openSheet(item ? t('form.editTitle') : t('form.newTitle'), pantryForm(item), 'save-pantry');
     if (item) {
       var form = document.querySelector('#sheet form');
       if (form) form.dataset.id = item.id;
     }
+  }
+
+  function personOptions(people, selected) {
+    return people.map(function (person) {
+      return '<option value="' + esc(person) + '"' + (person === selected ? ' selected' : '') + '>' + esc(personLabel(person)) + '</option>';
+    }).join('');
   }
 
   function openManual() {
@@ -653,43 +687,43 @@
     Store.get().family.people.forEach(function (person) { addPerson(person.name); });
     (Store.get().joined || []).forEach(function (row) { addPerson(row.name); });
     addPerson('Yo');
-    openSheet('Pedido de la familia', field('Qué falta', '<input name="name" required maxlength="80" placeholder="Ej. Manzana">')
-      + field('Categoría', '<select name="category">' + options(D.CATEGORIES, 'Frutas') + '</select>')
-      + '<div class="grid-2">' + field('Cantidad', '<input name="qty" required inputmode="decimal" step="any" min="0" value="1">')
-      + field('Unidad', '<select name="unit">' + options(D.UNITS, 'u', 'id', 'label') + '</select>') + '</div>'
-      + field('Precio estimado (Bs)', '<input name="price" required inputmode="decimal" step="any" min="0" value="0">', 'Si el producto está en el comparador, al guardar usamos el menor precio.')
-      + field('¿Quién lo pidió?', '<select name="by">' + options(people, me) + '</select>')
-      + field('Nota', '<input name="reason" maxlength="80" placeholder="Para la lonchera">')
-      + '<button class="btn" type="submit">Agregar a la lista</button>', 'save-manual');
+    openSheet(t('form.orderTitle'), field(t('form.what'), '<input name="name" required maxlength="80" placeholder="' + esc(t('form.whatPh')) + '">')
+      + field(t('form.category'), '<select name="category">' + catOptions('Frutas') + '</select>')
+      + '<div class="grid-2">' + field(t('form.qty'), '<input name="qty" required inputmode="decimal" step="any" min="0" value="1">')
+      + field(t('form.unit'), '<select name="unit">' + unitOptions('u') + '</select>') + '</div>'
+      + field(t('form.estPrice'), '<input name="price" required inputmode="decimal" step="any" min="0" value="0">', t('form.estHint'))
+      + field(t('form.who'), '<select name="by">' + personOptions(people, me) + '</select>')
+      + field(t('form.note'), '<input name="reason" maxlength="80" placeholder="' + esc(t('form.notePh')) + '">')
+      + '<button class="btn" type="submit">' + esc(t('btn.addList')) + '</button>', 'save-manual');
   }
 
   function openCheckout() {
     var checked = Store.get().shopping.filter(function (row) { return row.checked; });
     if (!checked.length) {
-      toast('Marca al menos un producto.');
+      toast(t('toast.mark'));
       return;
     }
     var lines = checked.map(function (row) {
       return '<p class="meta">' + esc(row.name) + ' · ' + esc(qtyLabel(row)) + ' · ' + esc(L.money(row.qty * row.price)) + '</p>';
     }).join('');
-    openSheet('Registrar compra', '<p>Esto suma el gasto de hoy, repone la despensa y saca del carrito lo marcado.</p>' + lines
-      + '<p><strong>Total ' + esc(L.money(L.listTotal(Store.get().shopping, true))) + '</strong></p>'
-      + field('Local', '<select name="store">' + options(D.STORES, 'Mercado Los Pozos') + '</select>')
-      + '<button class="btn" type="submit">Guardar compra</button>', 'save-checkout');
+    openSheet(t('form.checkoutTitle'), '<p>' + esc(t('form.checkoutLead')) + '</p>' + lines
+      + '<p><strong>' + esc(t('form.total', { money: L.money(L.listTotal(Store.get().shopping, true)) })) + '</strong></p>'
+      + field(t('form.store'), '<select name="store">' + options(D.STORES, 'Mercado Los Pozos') + '</select>')
+      + '<button class="btn" type="submit">' + esc(t('btn.saveBuy')) + '</button>', 'save-checkout');
   }
 
   function openExpense() {
-    openSheet('Anotar gasto', field('Local', '<select name="store">' + options(D.STORES, 'Hipermaxi') + '</select>')
-      + field('Categoría', '<select name="category">' + options(D.CATEGORIES, 'Despensa') + '</select>')
-      + field('Monto (Bs)', '<input name="amount" required inputmode="decimal" step="any" min="0" placeholder="25,50">')
-      + field('Fecha', '<input name="date" type="date" required value="' + today() + '">')
-      + field('Nota', '<input name="note" maxlength="80" placeholder="Pan y huevos">')
-      + '<button class="btn" type="submit">Guardar gasto</button>', 'save-expense');
+    openSheet(t('form.expenseTitle'), field(t('form.store'), '<select name="store">' + options(D.STORES, 'Hipermaxi') + '</select>')
+      + field(t('form.category'), '<select name="category">' + catOptions('Despensa') + '</select>')
+      + field(t('form.amount'), '<input name="amount" required inputmode="decimal" step="any" min="0" placeholder="' + esc(t('form.amountPh')) + '">')
+      + field(t('form.date'), '<input name="date" type="date" required value="' + today() + '">')
+      + field(t('form.note'), '<input name="note" maxlength="80" placeholder="' + esc(t('form.noteBuyPh')) + '">')
+      + '<button class="btn" type="submit">' + esc(t('btn.saveExpense')) + '</button>', 'save-expense');
   }
 
   function openBudget() {
-    openSheet('Presupuesto del mes', field('Límite en bolivianos', '<input name="limit" required inputmode="decimal" step="any" min="1" value="' + esc(Store.get().budgetLimit) + '">', 'Un hogar de cuatro en Santa Cruz de la Sierra puede moverse cerca de Bs 1.800 en comida, según cómo compren.')
-      + '<button class="btn" type="submit">Guardar límite</button>', 'save-budget');
+    openSheet(t('form.budgetTitle'), field(t('form.limit'), '<input name="limit" required inputmode="decimal" step="any" min="1" value="' + esc(Store.get().budgetLimit) + '">', t('form.limitHint'))
+      + '<button class="btn" type="submit">' + esc(t('btn.saveLimit')) + '</button>', 'save-budget');
   }
 
   function openCook(id) {
@@ -697,26 +731,26 @@
     if (!recipe) return;
     var impact = L.cookImpact(recipe, Store.get().pantry, today());
     if (!impact.canCook) {
-      toast('No hay ingredientes por vencer para esta receta. Si ya vencieron, no los cocines.');
+      toast(t('form.cookNoSoon'));
       return;
     }
     var lines = impact.used.map(function (row) {
-      return '<p class="meta">' + esc(row.name) + ' · ' + esc(L.formatQty(row.take)) + ' ' + esc(row.unitLabel) + ' · ' + esc(L.money(row.bs)) + '</p>';
+      return '<p class="meta">' + esc(row.name) + ' · ' + esc(L.formatQty(row.take)) + ' ' + esc(unitLabel(row.unitLabel)) + ' · ' + esc(L.money(row.bs)) + '</p>';
     }).join('');
-    openSheet(recipe.name, '<p>Vamos a descontar de la despensa solo lo que está por vencer. Lo vencido no entra.</p>' + lines
-      + '<p><strong>Ahorro estimado ' + esc(L.money(impact.bs)) + ' · ' + esc(L.formatQty(impact.kg)) + ' kg</strong></p>'
-      + '<button class="btn" type="button" data-action="cook-confirm" data-id="' + esc(recipe.id) + '">Confirmar receta</button>');
+    openSheet(known(recipe.name), '<p>' + esc(t('form.cookLead')) + '</p>' + lines
+      + '<p><strong>' + esc(t('form.cookSave', { money: L.money(impact.bs), kg: L.formatQty(impact.kg) })) + '</strong></p>'
+      + '<button class="btn" type="button" data-action="cook-confirm" data-id="' + esc(recipe.id) + '">' + esc(t('btn.confirmRecipe')) + '</button>');
   }
 
   function openDiscard(id) {
     var item = Store.get().pantry.filter(function (row) { return row.id === id; })[0];
     if (!item) return;
-    openSheet('Sacar de la despensa', '<p><strong>' + esc(item.name) + '</strong> ya venció. No lo aproveches en una receta. Al sacarlo se limpia la alerta y no suma bolivianos ni kilos salvados.</p><button class="btn danger" type="button" data-action="discard-confirm" data-id="' + esc(item.id) + '">Sacar de la despensa</button>');
+    openSheet(t('form.discardTitle'), '<p>' + t('form.discardLead', { name: '<strong>' + esc(item.name) + '</strong>' }) + '</p><button class="btn danger" type="button" data-action="discard-confirm" data-id="' + esc(item.id) + '">' + esc(t('btn.out')) + '</button>');
   }
 
   function openReset() {
     var session = Store.session();
-    openSheet('Restablecer datos', '<p>Se borran los cambios de ' + esc(session ? session.code : 'esta familia') + ' y vuelve la despensa de ejemplo. Las otras familias de este navegador no se tocan.</p><button class="btn danger" type="button" data-action="reset-confirm">Restablecer</button><button class="btn ghost" type="button" data-action="close-sheet">Cancelar</button>');
+    openSheet(t('form.resetTitle'), '<p>' + esc(t('form.resetLead', { code: session ? session.code : t('family.fallback') })) + '</p><button class="btn danger" type="button" data-action="reset-confirm">' + esc(t('btn.resetDo')) + '</button><button class="btn ghost" type="button" data-action="close-sheet">' + esc(t('btn.cancel')) + '</button>');
   }
 
   function suggestionByPantry(id) {
@@ -767,18 +801,18 @@
       pending.then(function (result) {
         if (submit) submit.disabled = false;
         if (!result || !result.ok) {
-          showFormError((result && result.error) || 'No se pudo entrar.');
+          showFormError(te((result && result.error) || 'toast.enterFail'));
           return;
         }
-        toast(action === 'auth-login' ? 'Hola, ' + result.name + '.' : 'Familia creada. El código es ' + result.code + '.');
+        toast(action === 'auth-login' ? t('toast.login', { name: result.name }) : t('toast.created', { code: result.code }));
         go('inicio');
       }).catch(function () {
         if (submit) submit.disabled = false;
-        showFormError('No se pudo conectar. Intenta de nuevo.');
+        showFormError(t('toast.connect'));
       });
     } else if (action === 'save-pantry') {
       var id = form && form.dataset.id;
-      finish(id ? Store.updatePantry(id, data) : Store.addPantry(data), id ? 'Producto actualizado.' : 'Producto agregado a la despensa.');
+      finish(id ? Store.updatePantry(id, data) : Store.addPantry(data), id ? t('toast.updated') : t('toast.addedPantry'));
     } else if (action === 'save-manual') {
       var name = data.name;
       var product = L.findProduct(name, D.CATALOG);
@@ -794,13 +828,13 @@
       }
       data.source = 'familia';
       data.reason = data.reason || 'Pedido de la familia';
-      finish(Store.addManualItem(data), 'Pedido anotado en la lista.');
+      finish(Store.addManualItem(data), t('toast.addedOrder'));
     } else if (action === 'save-checkout') {
-      finish(Store.checkout(data.store, today()), 'Compra registrada y despensa actualizada.');
+      finish(Store.checkout(data.store, today()), t('toast.checkout'));
     } else if (action === 'save-expense') {
-      finish(Store.addExpense(data), 'Gasto anotado en el presupuesto.');
+      finish(Store.addExpense(data), t('toast.expense'));
     } else if (action === 'save-budget') {
-      finish(Store.setBudget(data.limit), 'Presupuesto actualizado.');
+      finish(Store.setBudget(data.limit), t('toast.budget'));
     } else if (action === 'send-chat') {
       sendChat(data.text);
     }
@@ -812,6 +846,7 @@
     var action = el.dataset.action;
     if (action === 'lang') {
       I.set(el.dataset.lang);
+      closeSheet();
       render();
     } else if (action === 'auth-mode') {
       ui.authMode = el.dataset.mode === 'create' ? 'create' : 'login';
@@ -820,7 +855,7 @@
       Store.logout();
       closeSheet();
       ui.authMode = 'login';
-      toast('Sesión cerrada. La familia sigue en la nube y en este celular.');
+      toast(t('toast.logout'));
       render();
     } else if (action === 'go') go(el.dataset.route);
     else if (action === 'close-sheet') closeSheet();
@@ -830,43 +865,43 @@
     else if (action === 'edit-pantry') openPantry(el.dataset.id);
     else if (action === 'qty') {
       var result = Store.changeQty(el.dataset.id, el.dataset.delta);
-      if (!result.ok) toast(result.error);
+      if (!result.ok) toast(te(result.error));
       else render();
     } else if (action === 'delete-pantry') {
-      finish(Store.removePantry(el.dataset.id), 'Producto eliminado.');
+      finish(Store.removePantry(el.dataset.id), t('toast.deleted'));
     } else if (action === 'add-suggestion') {
       var suggestion = suggestionByPantry(el.dataset.id);
-      if (!suggestion) toast('Esa sugerencia ya no está.');
-      else finish(Store.addSuggestion(suggestion), suggestion.name + ' pasó a la lista.');
+      if (!suggestion) toast(t('toast.goneSuggest'));
+      else finish(Store.addSuggestion(suggestion), t('toast.addedOne', { name: suggestion.name }));
     } else if (action === 'add-all') {
       var all = Store.addAllSuggestions(today());
-      toast(all.count ? 'Se agregaron ' + all.count + ' sugerencias.' : 'No había sugerencias nuevas.');
+      toast(all.count ? t('toast.addedMany', { n: all.count }) : t('toast.noNew'));
       render();
     } else if (action === 'toggle-item') { Store.toggleItem(el.dataset.id); render(); }
-    else if (action === 'remove-item') { finish(Store.removeItem(el.dataset.id), 'Quitado de la lista.'); }
+    else if (action === 'remove-item') { finish(Store.removeItem(el.dataset.id), t('toast.removed')); }
     else if (action === 'open-manual') openManual();
     else if (action === 'open-checkout') openCheckout();
     else if (action === 'add-catalog') {
-      finish(Store.addCatalogProduct(el.dataset.id, 1), 'Listo. Quedó en la lista al precio más bajo.');
+      finish(Store.addCatalogProduct(el.dataset.id, 1), t('toast.catalog'));
     } else if (action === 'open-expense') openExpense();
     else if (action === 'open-budget') openBudget();
-    else if (action === 'remove-expense') { finish(Store.removeExpense(el.dataset.id), 'Compra borrada del mes.'); }
+    else if (action === 'remove-expense') { finish(Store.removeExpense(el.dataset.id), t('toast.deletedBuy')); }
     else if (action === 'open-cook') openCook(el.dataset.id);
     else if (action === 'cook-confirm') {
       var cooked = Store.cook(el.dataset.id, today());
-      if (!cooked.ok) showFormError(cooked.error);
+      if (!cooked.ok) showFormError(te(cooked.error));
       else {
         closeSheet();
-        toast('Receta anotada. Ahorro estimado ' + L.money(cooked.impact.bs) + ' y ' + L.formatQty(cooked.impact.kg) + ' kg.');
+        toast(t('toast.cooked', { money: L.money(cooked.impact.bs), kg: L.formatQty(cooked.impact.kg) }));
         render();
       }
     } else if (action === 'open-discard') openDiscard(el.dataset.id);
-    else if (action === 'discard-confirm') finish(Store.discard(el.dataset.id), 'Listo. No sumó al ahorro porque ya estaba vencido.');
+    else if (action === 'discard-confirm') finish(Store.discard(el.dataset.id), t('toast.discarded'));
     else if (action === 'open-reset') openReset();
     else if (action === 'reset-confirm') {
       Store.reset();
       closeSheet();
-      toast('Volvió la despensa de ejemplo de esta familia.');
+      toast(t('toast.reset'));
       render();
     } else if (action === 'quick') sendChat(I.phrase(QUICK[Number(el.dataset.i)] || ''));
     else if (action === 'bot-send') sendChat(el.dataset.text || '');
@@ -905,7 +940,7 @@
     app.addEventListener('change', function (event) {
       if (!event.target.classList || !event.target.classList.contains('member-name')) return;
       Store.setMember(event.target.dataset.index, event.target.value);
-      toast('Nombre guardado en este navegador.');
+      toast(t('toast.member'));
     });
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape') {

@@ -223,8 +223,8 @@
 
   function cleanName(name) {
     var clean = String(name || '').trim().replace(/\s+/g, ' ');
-    if (clean.length < 2) return { error: 'Escribe tu nombre.' };
-    if (clean.length > 40) return { error: 'El nombre es demasiado largo.' };
+    if (clean.length < 2) return { error: 'err.name' };
+    if (clean.length > 40) return { error: 'err.nameLong' };
     return { value: clean };
   }
 
@@ -243,10 +243,10 @@
     var person = cleanName(name);
     if (person.error) return { ok: false, error: person.error };
     var id = normalizeCode(code);
-    if (id.length < 4) return { ok: false, error: 'Escribe el código de la familia. Por ejemplo, ROJAS-2026.' };
+    if (id.length < 4) return { ok: false, error: 'err.code' };
     if (!vault) init();
     var family = vault.families[id];
-    if (!validFamily(family)) return { ok: false, error: 'Ese código no está en este navegador. Créalo o revísalo.' };
+    if (!validFamily(family)) return { ok: false, error: 'err.codeMissing' };
     remember(family, person.value);
     active = { code: id, name: person.value };
     state = family;
@@ -264,10 +264,10 @@
     var person = cleanName(name);
     if (person.error) return { ok: false, error: person.error };
     var label = titleCase(surname);
-    if (label.length < 2) return { ok: false, error: 'Escribe el apellido de la familia.' };
-    if (label.length > 40) return { ok: false, error: 'El apellido es demasiado largo.' };
+    if (label.length < 2) return { ok: false, error: 'err.surname' };
+    if (label.length > 40) return { ok: false, error: 'err.surnameLong' };
     var stem = L().norm(label).replace(/[^a-z0-9]/g, '').toUpperCase();
-    if (stem.length < 3) return { ok: false, error: 'El apellido necesita al menos 3 letras.' };
+    if (stem.length < 3) return { ok: false, error: 'err.surnameShort' };
     stem = stem.slice(0, 12);
     if (!vault) init();
     var year = String(L().todayISO()).slice(0, 4);
@@ -312,7 +312,7 @@
     var person = cleanName(name);
     if (person.error) return Promise.resolve({ ok: false, error: person.error });
     var id = normalizeCode(code);
-    if (id.length < 4) return Promise.resolve({ ok: false, error: 'Escribe el código de la familia. Por ejemplo, ROJAS-2026.' });
+    if (id.length < 4) return Promise.resolve({ ok: false, error: 'err.code' });
     if (!vault) init();
     var remote = cloud();
     if (!remote) return Promise.resolve(login(name, id));
@@ -329,7 +329,7 @@
         return stamp(family);
       });
     }).then(function (family) {
-      if (!validFamily(family)) return { ok: false, error: 'Ese código no existe. Créalo o revísalo.' };
+      if (!validFamily(family)) return { ok: false, error: 'err.codeUnknown' };
       activate(id, person.value, family);
       watchCurrent();
       noteStatus('synced');
@@ -338,7 +338,7 @@
       noteStatus('offline');
       if (id === DEMO_CODE) ensureDemo();
       var local = login(name, id);
-      if (!local.ok) return { ok: false, error: 'No hay conexión y ese código no está guardado en este celular.' };
+      if (!local.ok) return { ok: false, error: 'err.offlineCode' };
       watchCurrent();
       return local;
     });
@@ -359,10 +359,10 @@
     var person = cleanName(name);
     if (person.error) return Promise.resolve({ ok: false, error: person.error });
     var label = titleCase(surname);
-    if (label.length < 2) return Promise.resolve({ ok: false, error: 'Escribe el apellido de la familia.' });
-    if (label.length > 40) return Promise.resolve({ ok: false, error: 'El apellido es demasiado largo.' });
+    if (label.length < 2) return Promise.resolve({ ok: false, error: 'err.surname' });
+    if (label.length > 40) return Promise.resolve({ ok: false, error: 'err.surnameLong' });
     var stem = L().norm(label).replace(/[^a-z0-9]/g, '').toUpperCase();
-    if (stem.length < 3) return Promise.resolve({ ok: false, error: 'El apellido necesita al menos 3 letras.' });
+    if (stem.length < 3) return Promise.resolve({ ok: false, error: 'err.surnameShort' });
     stem = stem.slice(0, 12);
     if (!vault) init();
     var remote = cloud();
@@ -382,14 +382,14 @@
             if (validFamily(current)) return false;
             return stamp(family);
           }).then(function (again) {
-            if (!validFamily(again)) return { ok: false, error: 'No se pudo crear la familia.' };
+            if (!validFamily(again)) return { ok: false, error: 'err.create' };
             activate(nextCode, person.value, again);
             watchCurrent();
             noteStatus('synced');
             return { ok: true, code: nextCode, name: person.value, saved: true };
           });
         });
-        if (!validFamily(saved)) return { ok: false, error: 'No se pudo crear la familia.' };
+        if (!validFamily(saved)) return { ok: false, error: 'err.create' };
         activate(code, person.value, saved);
         watchCurrent();
         noteStatus('synced');
@@ -431,16 +431,16 @@
 
   function cleanPantry(fields) {
     var name = String(fields.name || '').trim().replace(/\s+/g, ' ');
-    if (name.length < 2) return { error: 'Escribe el nombre del producto.' };
-    if (name.length > 80) return { error: 'El nombre es demasiado largo.' };
+    if (name.length < 2) return { error: 'err.product' };
+    if (name.length > 80) return { error: 'err.nameLong' };
     var qty = L().num(fields.qty);
     var min = L().num(fields.min);
     var price = L().num(fields.price);
-    if (!isFinite(qty) || qty < 0) return { error: 'La cantidad no es válida.' };
-    if (!isFinite(min) || min < 0) return { error: 'El stock mínimo no es válido.' };
-    if (!isFinite(price) || price < 0) return { error: 'El precio no es válido.' };
+    if (!isFinite(qty) || qty < 0) return { error: 'err.qty' };
+    if (!isFinite(min) || min < 0) return { error: 'err.min' };
+    if (!isFinite(price) || price < 0) return { error: 'err.price' };
     var expiry = fields.expiry ? String(fields.expiry) : '';
-    if (expiry && !L().parseISO(expiry)) return { error: 'La fecha de vencimiento no es válida.' };
+    if (expiry && !L().parseISO(expiry)) return { error: 'err.expiry' };
     var category = String(fields.category || 'Despensa');
     if (D().CATEGORIES.indexOf(category) === -1) category = 'Despensa';
     var unit = String(fields.unit || 'u');
@@ -489,7 +489,7 @@
     if (clean.error) return { ok: false, error: clean.error };
     return update(function (current) {
       var item = current.pantry.filter(function (row) { return row.id === id; })[0];
-      if (!item) return { ok: false, error: 'No encontré el producto.' };
+      if (!item) return { ok: false, error: 'err.notFound' };
       var next = clean.value;
       next.id = item.id;
       Object.keys(next).forEach(function (key) { item[key] = next[key]; });
@@ -500,9 +500,9 @@
   function changeQty(id, delta) {
     return update(function (current) {
       var item = current.pantry.filter(function (row) { return row.id === id; })[0];
-      if (!item) return { ok: false, error: 'No encontré el producto.' };
+      if (!item) return { ok: false, error: 'err.notFound' };
       var step = L().num(delta);
-      if (!isFinite(step)) return { ok: false, error: 'La cantidad no es válida.' };
+      if (!isFinite(step)) return { ok: false, error: 'err.qty' };
       item.qty = L().round2(Math.max(0, Number(item.qty) + step));
       return { ok: true, qty: item.qty };
     });
@@ -512,7 +512,7 @@
     return update(function (current) {
       var before = current.pantry.length;
       current.pantry = current.pantry.filter(function (row) { return row.id !== id; });
-      if (current.pantry.length === before) return { ok: false, error: 'No encontré el producto.' };
+      if (current.pantry.length === before) return { ok: false, error: 'err.notFound' };
       return { ok: true };
     });
   }
@@ -531,11 +531,11 @@
 
   function shoppingFrom(fields) {
     var name = String(fields.name || '').trim().replace(/\s+/g, ' ');
-    if (name.length < 2) return { error: 'Escribe qué hay que comprar.' };
+    if (name.length < 2) return { error: 'err.what' };
     var qty = L().num(fields.qty);
     var price = L().num(fields.price);
-    if (!isFinite(qty) || qty <= 0) return { error: 'La cantidad tiene que ser mayor que cero.' };
-    if (!isFinite(price) || price < 0) return { error: 'El precio estimado no es válido.' };
+    if (!isFinite(qty) || qty <= 0) return { error: 'err.qtyZero' };
+    if (!isFinite(price) || price < 0) return { error: 'err.estPrice' };
     var category = String(fields.category || 'Despensa');
     if (D().CATEGORIES.indexOf(category) === -1) category = 'Despensa';
     var unit = String(fields.unit || 'u');
@@ -602,7 +602,7 @@
 
   function addCatalogProduct(productId, qty) {
     var product = D().CATALOG.filter(function (row) { return row.id === productId; })[0];
-    if (!product) return { ok: false, error: 'No encontré el producto.' };
+    if (!product) return { ok: false, error: 'err.notFound' };
     var best = L().cheapestStores(product.prices)[0];
     var amount = L().num(qty);
     if (!isFinite(amount) || amount <= 0) amount = product.unit === 'kg' ? 1 : 1;
@@ -624,7 +624,7 @@
   function toggleItem(id) {
     return update(function (current) {
       var item = current.shopping.filter(function (row) { return row.id === id; })[0];
-      if (!item) return { ok: false, error: 'No encontré el producto en la lista.' };
+      if (!item) return { ok: false, error: 'err.notOnList' };
       item.checked = !item.checked;
       return { ok: true, checked: item.checked };
     });
@@ -634,18 +634,18 @@
     return update(function (current) {
       var before = current.shopping.length;
       current.shopping = current.shopping.filter(function (row) { return row.id !== id; });
-      if (current.shopping.length === before) return { ok: false, error: 'No encontré el producto en la lista.' };
+      if (current.shopping.length === before) return { ok: false, error: 'err.notOnList' };
       return { ok: true };
     });
   }
 
   function checkout(storeName, today) {
     var store = String(storeName || '').trim();
-    if (!store) return { ok: false, error: 'Elige un local.' };
-    if (!L().parseISO(today)) return { ok: false, error: 'La fecha no es válida.' };
+    if (!store) return { ok: false, error: 'err.store' };
+    if (!L().parseISO(today)) return { ok: false, error: 'err.date' };
     return update(function (current) {
       var checked = current.shopping.filter(function (row) { return row.checked; });
-      if (!checked.length) return { ok: false, error: 'Marca al menos un producto.' };
+      if (!checked.length) return { ok: false, error: 'err.mark' };
       var items = checked.map(function (row) {
         var subtotal = L().round2(Number(row.qty) * Number(row.price));
         return {
@@ -703,11 +703,11 @@
     var note = String(fields.note || '').trim();
     var amount = L().num(fields.amount);
     var date = String(fields.date || '');
-    if (!store) return { ok: false, error: 'Indica el local.' };
-    if (D().CATEGORIES.indexOf(category) === -1) return { ok: false, error: 'Elige una categoría.' };
-    if (!isFinite(amount) || amount <= 0) return { ok: false, error: 'El monto tiene que ser mayor que cero.' };
-    if (!L().parseISO(date)) return { ok: false, error: 'La fecha no es válida.' };
-    if (note.length > 80) return { ok: false, error: 'La nota es demasiado larga.' };
+    if (!store) return { ok: false, error: 'err.storeName' };
+    if (D().CATEGORIES.indexOf(category) === -1) return { ok: false, error: 'err.category' };
+    if (!isFinite(amount) || amount <= 0) return { ok: false, error: 'err.amount' };
+    if (!L().parseISO(date)) return { ok: false, error: 'err.date' };
+    if (note.length > 80) return { ok: false, error: 'err.noteLong' };
     return update(function (current) {
       var subtotal = L().round2(amount);
       current.purchases.unshift({
@@ -733,15 +733,15 @@
     return update(function (current) {
       var before = current.purchases.length;
       current.purchases = current.purchases.filter(function (row) { return row.id !== id; });
-      if (current.purchases.length === before) return { ok: false, error: 'No encontré esa compra.' };
+      if (current.purchases.length === before) return { ok: false, error: 'err.purchase' };
       return { ok: true };
     });
   }
 
   function setBudget(limit) {
     var value = L().num(limit);
-    if (!isFinite(value) || value <= 0) return { ok: false, error: 'El presupuesto tiene que ser mayor que cero.' };
-    if (value > 1000000) return { ok: false, error: 'Ese monto es demasiado alto para este prototipo.' };
+    if (!isFinite(value) || value <= 0) return { ok: false, error: 'err.budget' };
+    if (value > 1000000) return { ok: false, error: 'err.tooHigh' };
     return update(function (current) {
       current.budgetLimit = L().round2(value);
       return { ok: true, budgetLimit: current.budgetLimit };
@@ -750,10 +750,10 @@
 
   function cook(recipeId, today) {
     var recipe = D().RECIPES.filter(function (row) { return row.id === recipeId; })[0];
-    if (!recipe) return { ok: false, error: 'No encontré la receta.' };
+    if (!recipe) return { ok: false, error: 'err.recipe' };
     var impact = L().cookImpact(recipe, get().pantry, today);
     if (!impact.canCook) {
-      return { ok: false, error: 'Esta receta no tiene ingredientes por vencer que se puedan usar. Si ya vencieron, no los cocines.' };
+      return { ok: false, error: 'err.recipeSoon' };
     }
     return update(function (current) {
       impact.used.forEach(function (row) {
@@ -798,7 +798,7 @@
     var i = Number(index);
     var clean = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 60);
     return update(function (current) {
-      if (!current.group[i]) return { ok: false, error: 'No encontré ese lugar del grupo.' };
+      if (!current.group[i]) return { ok: false, error: 'err.member' };
       current.group[i].name = clean;
       return { ok: true };
     });
